@@ -1,0 +1,196 @@
+{
+    "adminEntityUpdates": {
+        "description": "Additional entities and attributes needed for ADMIN role",
+        "newEntities": [
+            {
+                "name": "AuditLog",
+                "tier": 1,
+                "tableName": "audit_logs",
+                "description": "Immutable log of all user actions in the system",
+                "attributes": [
+                    {
+                        "name": "id",
+                        "type": "UUID",
+                        "nullable": false,
+                        "primaryKey": true,
+                        "description": "Unique identifier"
+                    },
+                    {
+                        "name": "userId",
+                        "type": "UUID",
+                        "nullable": false,
+                        "foreignKey": "users.id",
+                        "description": "User who performed the action"
+                    },
+                    {
+                        "name": "action",
+                        "type": "String",
+                        "length": 100,
+                        "nullable": false,
+                        "description": "Action performed (LOGIN, LOGOUT, CREATE_PRODUCT, UPDATE_PRODUCT, DELETE_PRODUCT, OVERRIDE_AI, CREATE_TRANSACTION, etc.)"
+                    },
+                    {
+                        "name": "entityType",
+                        "type": "String",
+                        "length": 50,
+                        "nullable": true,
+                        "description": "Type of entity affected (Product, Location, Transaction, User, etc.)"
+                    },
+                    {
+                        "name": "entityId",
+                        "type": "UUID",
+                        "nullable": true,
+                        "description": "ID of the affected entity"
+                    },
+                    {
+                        "name": "oldValue",
+                        "type": "TEXT",
+                        "nullable": true,
+                        "description": "Previous value (stored as JSON)"
+                    },
+                    {
+                        "name": "newValue",
+                        "type": "TEXT",
+                        "nullable": true,
+                        "description": "New value (stored as JSON)"
+                    },
+                    {
+                        "name": "ipAddress",
+                        "type": "String",
+                        "length": 45,
+                        "nullable": true,
+                        "description": "IP address of the user"
+                    },
+                    {
+                        "name": "userAgent",
+                        "type": "String",
+                        "length": 255,
+                        "nullable": true,
+                        "description": "Browser/device user agent"
+                    },
+                    {
+                        "name": "createdAt",
+                        "type": "LocalDateTime",
+                        "nullable": false,
+                        "description": "When action occurred (immutable)"
+                    }
+                ],
+                "relationships": [
+                    {
+                        "type": "ManyToOne",
+                        "target": "User",
+                        "joinColumn": "userId",
+                        "description": "User who performed action"
+                    }
+                ],
+                "indexes": [
+                    {
+                        "name": "idx_audit_user_created",
+                        "columns": [
+                            "userId",
+                            "createdAt"
+                        ]
+                    },
+                    {
+                        "name": "idx_audit_entity",
+                        "columns": [
+                            "entityType",
+                            "entityId"
+                        ]
+                    },
+                    {
+                        "name": "idx_audit_action",
+                        "columns": [
+                            "action",
+                            "createdAt"
+                        ]
+                    }
+                ]
+            }
+        ],
+        "entityUpdates": [
+            {
+                "entity": "Product",
+                "addAttributes": [
+                    {
+                        "name": "price",
+                        "type": "Double",
+                        "nullable": true,
+                        "description": "Product price (optional)"
+                    },
+                    {
+                        "name": "minStock",
+                        "type": "Integer",
+                        "nullable": true,
+                        "description": "Minimum stock threshold for alerts"
+                    },
+                    {
+                        "name": "maxStock",
+                        "type": "Integer",
+                        "nullable": true,
+                        "description": "Maximum stock capacity"
+                    }
+                ]
+            },
+            {
+                "entity": "Location",
+                "addAttributes": [
+                    {
+                        "name": "positionX",
+                        "type": "Double",
+                        "nullable": true,
+                        "description": "X coordinate in warehouse (from CSV)"
+                    },
+                    {
+                        "name": "positionY",
+                        "type": "Double",
+                        "nullable": true,
+                        "description": "Y coordinate in warehouse (from CSV)"
+                    },
+                    {
+                        "name": "positionZ",
+                        "type": "Double",
+                        "nullable": true,
+                        "defaultValue": 0,
+                        "description": "Z coordinate (floor level)"
+                    },
+                    {
+                        "name": "distanceFromReceipt",
+                        "type": "Double",
+                        "nullable": true,
+                        "description": "Precalculated distance from receipt zone"
+                    },
+                    {
+                        "name": "distanceFromExpedition",
+                        "type": "Double",
+                        "nullable": true,
+                        "description": "Precalculated distance from expedition zone"
+                    }
+                ]
+            },
+            {
+                "entity": "User",
+                "addAttributes": [
+                    {
+                        "name": "currentPositionX",
+                        "type": "Double",
+                        "nullable": true,
+                        "description": "Current X coordinate (updated when scanning)"
+                    },
+                    {
+                        "name": "currentPositionY",
+                        "type": "Double",
+                        "nullable": true,
+                        "description": "Current Y coordinate (updated when scanning)"
+                    },
+                    {
+                        "name": "lastPositionUpdate",
+                        "type": "LocalDateTime",
+                        "nullable": true,
+                        "description": "When position was last updated"
+                    }
+                ]
+            }
+        ]
+    }
+}

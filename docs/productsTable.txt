@@ -1,0 +1,3 @@
+columns : id_produit	sku	nom_produit	unite_mesure	categorie	actif	colisage fardeau	colisage palette	volume pcs (m3)	Poids(kg)	Is_Gerbable
+type :     texte	texte	texte	texte	texte	booleen	nombre	nombre	nombre	nombre	booleen
+isObligatoire : Y	Y	Y	Y	N	Y	Y	N	Y	N	N

@@ -6,8 +6,10 @@ import org.example.backend.enums.Role;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.ArrayList;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -21,6 +23,7 @@ public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id_utilisateur")
     private UUID id;
 
     @Column(nullable = false, unique = true, length = 100)
@@ -38,11 +41,14 @@ public class User implements UserDetails {
     @Column(length = 100)
     private String lastName;
 
+    @Column(name = "nom_complet", length = 200)
+    private String nomComplet;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
 
-    @Column(nullable = false)
+    @Column(name = "actif", nullable = false)
     @Builder.Default
     private Boolean active = true;
 
@@ -64,15 +70,38 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column
+    private Double currentPositionX;
+
+    @Column
+    private Double currentPositionY;
+
+    @Column
+    private LocalDateTime lastPositionUpdate;
+
+    @OneToMany(mappedBy = "createdBy")
+    @Builder.Default
+    private List<Transaction> createdTransactions = new ArrayList<>();
+
+    @OneToMany(mappedBy = "assignedTo")
+    @Builder.Default
+    private List<Transaction> assignedTransactions = new ArrayList<>();
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        updateNomComplet();
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+        updateNomComplet();
+    }
+
+    private void updateNomComplet() {
+        this.nomComplet = getFullName().trim();
     }
 
     // UserDetails implementation

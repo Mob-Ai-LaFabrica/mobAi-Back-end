@@ -1,0 +1,4 @@
+date	id_produit	quantite_demande
+
+example row:
+2024-03-09 10:20:17	31779	4

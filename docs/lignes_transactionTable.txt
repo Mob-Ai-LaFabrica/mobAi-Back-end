@@ -1,0 +1,6 @@
+id_transaction	no_ligne	id_produit	quantite	id_emplacement_source	id_emplacement_destination	lot_serie	code_motif
+texte	entier	texte	nombre	texte	texte	texte	texte
+O	O	O	O	O	O	N	N
+
+example row:
+BL/ME25/03449		31851	80	54	COSTUMER LOCATION		

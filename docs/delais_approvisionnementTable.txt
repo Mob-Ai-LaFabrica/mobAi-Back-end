@@ -1,0 +1,6 @@
+id_produit	delai_jours
+texte	entier
+O	O
+
+example row:
+P001	14

@@ -1,0 +1,3 @@
+code_barres	id_produit	type_code_barres	principal	code barre fardeau	code barre palette
+texte	texte	texte	booleen	texte	texte
+O	O	O	N	O	N

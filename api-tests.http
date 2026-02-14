@@ -131,6 +131,7 @@ Authorization: Bearer {{token}}
   "toLocation": "RACK-Z9",
   "transferPath": ["RECV-Z1", "AISLE-Z", "RACK-Z9"],
   "assignedWorkerId": "employee1",
+  "taskType": "RECEIPT",
   "status": "created",
   "scanStep": 0
 }
@@ -148,9 +149,100 @@ Authorization: Bearer {{token}}
   "toLocation": "RACK-Z9",
   "transferPath": ["RECV-Z1", "QC-ZONE", "RACK-Z9"],
   "assignedWorkerId": "employee1",
+  "taskType": "RECEIPT",
   "status": "picked",
   "scanStep": 2
 }
+
+########################################
+# EMPLOYEE WORKFLOW ENDPOINTS
+########################################
+
+### 17. Employee Dashboard
+GET {{baseUrl}}/dashboard/employee
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+### 18. My Tasks
+GET {{baseUrl}}/operations/my-tasks
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+### 19. My Task By ID
+GET {{baseUrl}}/operations/my-tasks/{{orderId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+### 20. Start Receipt
+POST {{baseUrl}}/operations/receipt/start
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "commandOrderId": "{{orderId}}",
+  "chariotId": "CH-001"
+}
+
+### 21. Scan Receipt Product
+POST {{baseUrl}}/operations/receipt/scan-product
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "transactionId": "{{orderId}}",
+  "barcodeSku": "MIXER-001",
+  "quantityReceived": 10
+}
+
+### 22. Complete Receipt
+POST {{baseUrl}}/operations/receipt/{{orderId}}/complete
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+### 23. Transfer Assignment
+GET {{baseUrl}}/operations/transfer/{{orderId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+### 24. Picking List
+GET {{baseUrl}}/operations/picking
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+### 25. Delivery List
+GET {{baseUrl}}/operations/delivery
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+### 26. My History
+GET {{baseUrl}}/operations/my-history
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+### 27. Available Chariots
+GET {{baseUrl}}/chariots/available
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+### 28. Notifications
+GET {{baseUrl}}/notifications
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+### 29. Decode Barcode
+POST {{baseUrl}}/scan/decode
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "barcodeData": "B07-N1-A3",
+  "scanContext": "LOCATION"
+}
+
+### 30. Operation Help
+GET {{baseUrl}}/help/operations/receipt
+Content-Type: application/json
+Authorization: Bearer {{token}}
 
 ### 16. Delete Order
 DELETE {{baseUrl}}/orders/{{orderId}}

@@ -22,11 +22,13 @@ public enum Role {
             Permission.INVENTORY_READ, Permission.INVENTORY_WRITE,
             Permission.LOCATION_READ, Permission.LOCATION_WRITE,
             Permission.OPERATION_READ, Permission.OPERATION_WRITE,
+            Permission.USER_READ,
             Permission.DASHBOARD_READ)),
     EMPLOYEE(Set.of(
             Permission.PRODUCT_READ,
             Permission.INVENTORY_READ,
             Permission.OPERATION_READ,
+            Permission.OPERATION_WRITE,
             Permission.DASHBOARD_READ));
 
     private final Set<Permission> permissions;

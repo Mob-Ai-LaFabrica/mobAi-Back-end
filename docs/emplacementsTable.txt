@@ -1,0 +1,4 @@
+id_emplacement	code_emplacement	id_entrepot	zone	type_emplacement	actif	Volume (m3)
+
+example row:
+418	0A-01-01	235	B7-PCK	PICKING	True	

@@ -12,8 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.UUID;
-
 @RestController
 @RequestMapping("/orders")
 @RequiredArgsConstructor
@@ -26,31 +24,30 @@ public class OperationsController {
     public ResponseEntity<ApiResponse<Page<OrderResponse>>> getAllOrders(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "taskId") String sortBy,
+            @RequestParam(defaultValue = "idCommandeAchat") String sortBy,
             @RequestParam(defaultValue = "asc") String direction) {
 
         Page<OrderResponse> orders = orderService.getAllOrders(page, size, sortBy, direction);
         return ResponseEntity.ok(ApiResponse.success(orders, "Orders retrieved successfully"));
     }
 
-    @GetMapping("/employee/{assignedWorkerId}")
+    @GetMapping("/statut/{statut}")
     @PreAuthorize("hasAuthority('operation:read')")
-    public ResponseEntity<ApiResponse<Page<OrderResponse>>> getOrdersByAssignedWorkerId(
-            @PathVariable String assignedWorkerId,
+    public ResponseEntity<ApiResponse<Page<OrderResponse>>> getOrdersByStatut(
+            @PathVariable String statut,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "taskId") String sortBy,
+            @RequestParam(defaultValue = "idCommandeAchat") String sortBy,
             @RequestParam(defaultValue = "asc") String direction) {
 
-        Page<OrderResponse> orders = orderService.getOrdersByAssignedWorkerId(assignedWorkerId, page, size, sortBy,
-                direction);
-        return ResponseEntity.ok(ApiResponse.success(orders, "Employee orders retrieved successfully"));
+        Page<OrderResponse> orders = orderService.getOrdersByStatut(statut, page, size, sortBy, direction);
+        return ResponseEntity.ok(ApiResponse.success(orders, "Orders by status retrieved successfully"));
     }
 
-    @GetMapping("/{taskId}")
+    @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('operation:read')")
-    public ResponseEntity<ApiResponse<OrderResponse>> getOrderById(@PathVariable UUID taskId) {
-        OrderResponse order = orderService.getOrderById(taskId);
+    public ResponseEntity<ApiResponse<OrderResponse>> getOrderById(@PathVariable String id) {
+        OrderResponse order = orderService.getOrderById(id);
         return ResponseEntity.ok(ApiResponse.success(order, "Order retrieved successfully"));
     }
 
@@ -62,20 +59,20 @@ public class OperationsController {
                 .body(ApiResponse.success(order, "Order created successfully"));
     }
 
-    @PutMapping("/{taskId}")
+    @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('operation:write')")
     public ResponseEntity<ApiResponse<OrderResponse>> updateOrder(
-            @PathVariable UUID taskId,
+            @PathVariable String id,
             @Valid @RequestBody OrderRequest request) {
 
-        OrderResponse order = orderService.updateOrder(taskId, request);
+        OrderResponse order = orderService.updateOrder(id, request);
         return ResponseEntity.ok(ApiResponse.success(order, "Order updated successfully"));
     }
 
-    @DeleteMapping("/{taskId}")
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('operation:write')")
-    public ResponseEntity<ApiResponse<String>> deleteOrder(@PathVariable UUID taskId) {
-        orderService.deleteOrder(taskId);
+    public ResponseEntity<ApiResponse<String>> deleteOrder(@PathVariable String id) {
+        orderService.deleteOrder(id);
         return ResponseEntity.ok(ApiResponse.success("Order deleted successfully"));
     }
 }

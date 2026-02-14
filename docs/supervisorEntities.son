@@ -1,0 +1,285 @@
+{
+  "description": "All entities required for the Supervisor role endpoints in MobAi WMS",
+  "entities": [
+    {
+      "name": "User",
+      "table": "users",
+      "fields": {
+        "id": "UUID (PK, auto-generated)",
+        "username": "String (unique, max 100)",
+        "email": "String (unique, max 150)",
+        "password": "String (BCrypt encoded)",
+        "firstName": "String (max 100)",
+        "lastName": "String (max 100)",
+        "role": "Role enum (ADMIN, SUPERVISOR, EMPLOYEE)",
+        "active": "Boolean (default true)",
+        "accountNonExpired": "Boolean (default true)",
+        "accountNonLocked": "Boolean (default true)",
+        "credentialsNonExpired": "Boolean (default true)",
+        "createdAt": "LocalDateTime (auto-set on create)",
+        "updatedAt": "LocalDateTime (auto-set on create/update)"
+      },
+      "relationships": {
+        "createdTransactions": "OneToMany → Transaction (mappedBy createdBy)",
+        "assignedTransactions": "OneToMany → Transaction (mappedBy assignedTo)"
+      }
+    },
+    {
+      "name": "Transaction",
+      "table": "transactions",
+      "description": "Represents a warehouse task/operation (receipt, transfer, picking, delivery)",
+      "fields": {
+        "id": "UUID (PK, auto-generated)",
+        "type": "TransactionType enum (RECEIPT, TRANSFER, PICKING, DELIVERY)",
+        "reference": "String (unique, max 50)",
+        "status": "TransactionStatus enum (DRAFT, PENDING, IN_PROGRESS, COMPLETED, CANCELLED, FAILED)",
+        "priority": "Priority enum (LOW, MEDIUM, HIGH, URGENT) - default MEDIUM",
+        "createdAt": "LocalDateTime (auto-set)",
+        "assignedAt": "LocalDateTime",
+        "startedAt": "LocalDateTime",
+        "completedAt": "LocalDateTime",
+        "notes": "String (max 500)"
+      },
+      "relationships": {
+        "createdBy": "ManyToOne → User (required)",
+        "assignedTo": "ManyToOne → User (optional)",
+        "chariot": "ManyToOne → Chariot (optional)",
+        "transactionLines": "OneToMany → TransactionLine (cascade ALL)",
+        "stockLedgers": "OneToMany → StockLedger",
+        "discrepancies": "OneToMany → TaskDiscrepancy"
+      }
+    },
+    {
+      "name": "TransactionLine",
+      "table": "transaction_lines",
+      "description": "Individual line item within a transaction",
+      "fields": {
+        "id": "UUID (PK, auto-generated)",
+        "lineNumber": "Integer (required, unique per transaction)",
+        "quantity": "Integer (required)",
+        "createdAt": "LocalDateTime (auto-set)"
+      },
+      "relationships": {
+        "transaction": "ManyToOne → Transaction (required)",
+        "product": "ManyToOne → Product (required)",
+        "sourceLocation": "ManyToOne → Location (optional)",
+        "destinationLocation": "ManyToOne → Location (optional)"
+      }
+    },
+    {
+      "name": "Product",
+      "table": "products",
+      "fields": {
+        "id": "UUID (PK, auto-generated)",
+        "sku": "String (unique, max 50)",
+        "name": "String (max 200)",
+        "unitOfMeasure": "String (max 20)",
+        "category": "String (max 100)",
+        "active": "Boolean (default true)",
+        "createdAt": "LocalDateTime (auto-set)",
+        "updatedAt": "LocalDateTime (auto-set)"
+      },
+      "relationships": {
+        "barcodes": "OneToMany → ProductBarcode",
+        "transactionLines": "OneToMany → TransactionLine",
+        "stockLedgers": "OneToMany → StockLedger",
+        "demandHistory": "OneToMany → DemandHistory",
+        "discrepancies": "OneToMany → TaskDiscrepancy"
+      }
+    },
+    {
+      "name": "ProductBarcode",
+      "table": "product_barcodes",
+      "fields": {
+        "id": "UUID (PK, auto-generated)",
+        "barcode": "String (unique)",
+        "barcodeType": "BarcodeType enum"
+      },
+      "relationships": {
+        "product": "ManyToOne → Product (required)"
+      }
+    },
+    {
+      "name": "Location",
+      "table": "locations",
+      "fields": {
+        "id": "UUID (PK, auto-generated)",
+        "code": "String (unique, max 50)",
+        "zone": "String (max 50)",
+        "type": "LocationType enum (RECEIVING, STORAGE, PICKING, SHIPPING, QC, STAGING)",
+        "active": "Boolean (default true)",
+        "createdAt": "LocalDateTime (auto-set)",
+        "updatedAt": "LocalDateTime (auto-set)"
+      },
+      "relationships": {
+        "warehouse": "ManyToOne → Warehouse (required)",
+        "sourceTransactionLines": "OneToMany → TransactionLine",
+        "destinationTransactionLines": "OneToMany → TransactionLine",
+        "stockLedgers": "OneToMany → StockLedger",
+        "chariots": "OneToMany → Chariot"
+      }
+    },
+    {
+      "name": "Warehouse",
+      "table": "warehouses",
+      "fields": {
+        "id": "UUID (PK, auto-generated)",
+        "name": "String",
+        "code": "String (unique)",
+        "address": "String"
+      },
+      "relationships": {
+        "locations": "OneToMany → Location"
+      }
+    },
+    {
+      "name": "StockLedger",
+      "table": "stock_ledger",
+      "description": "Tracks all stock movements with running balance per product-location",
+      "fields": {
+        "id": "UUID (PK, auto-generated)",
+        "movementType": "MovementType enum (IN, OUT, ADJUSTMENT)",
+        "quantity": "Integer (required)",
+        "runningBalance": "Integer (required, CHECK >= 0)",
+        "performedAt": "LocalDateTime (auto-set)",
+        "createdAt": "LocalDateTime (auto-set)"
+      },
+      "relationships": {
+        "product": "ManyToOne → Product (required)",
+        "location": "ManyToOne → Location (required)",
+        "transaction": "ManyToOne → Transaction (required)",
+        "transactionLine": "ManyToOne → TransactionLine (optional)",
+        "performedBy": "ManyToOne → User (required)"
+      },
+      "indexes": ["idx_stock_ledger_product_location (product_id, location_id, performed_at)"]
+    },
+    {
+      "name": "TaskDiscrepancy",
+      "table": "task_discrepancies",
+      "description": "Issues reported during warehouse operations",
+      "fields": {
+        "id": "UUID (PK, auto-generated)",
+        "issueType": "IssueType enum (MISSING, DAMAGED, EXCESS, WRONG_LOCATION, NOT_FOUND, INSUFFICIENT_STOCK)",
+        "expectedQuantity": "Integer (optional)",
+        "actualQuantity": "Integer (optional)",
+        "reportedAt": "LocalDateTime (auto-set)",
+        "resolvedAt": "LocalDateTime (set when resolved)",
+        "resolution": "String (max 500)",
+        "notes": "String (max 1000)"
+      },
+      "relationships": {
+        "transaction": "ManyToOne → Transaction (required)",
+        "transactionLine": "ManyToOne → TransactionLine (optional)",
+        "product": "ManyToOne → Product (required)",
+        "reportedBy": "ManyToOne → User (required)",
+        "resolvedBy": "ManyToOne → User (optional, set on resolution)"
+      }
+    },
+    {
+      "name": "AiDecisionLog",
+      "table": "ai_decision_logs",
+      "description": "Logs of AI suggestions and supervisor reviews/overrides",
+      "fields": {
+        "id": "UUID (PK, auto-generated)",
+        "decisionType": "AiDecisionType enum (STORAGE_ASSIGNMENT, PICKING_ROUTE, PREPARATION_FORECAST)",
+        "entityType": "String (max 50, e.g. 'Product', 'Transaction')",
+        "entityId": "UUID",
+        "aiSuggestion": "String (TEXT)",
+        "finalDecision": "String (TEXT)",
+        "wasOverridden": "Boolean (default false)",
+        "overrideReason": "String (max 500)",
+        "confidence": "Double (0.0 - 1.0)",
+        "createdAt": "LocalDateTime (auto-set)",
+        "overriddenAt": "LocalDateTime (null = pending review)"
+      },
+      "relationships": {
+        "overriddenBy": "ManyToOne → User (optional, set on approve/override)"
+      },
+      "indexes": ["idx_ai_decision_entity (entity_type, entity_id)"]
+    },
+    {
+      "name": "Chariot",
+      "table": "chariots",
+      "description": "Warehouse chariots/carts used for moving goods",
+      "fields": {
+        "id": "UUID (PK, auto-generated)",
+        "code": "String (unique, max 20)",
+        "status": "ChariotStatus enum (AVAILABLE, IN_USE, MAINTENANCE, RETIRED)",
+        "active": "Boolean (default true)",
+        "lastUsedAt": "LocalDateTime",
+        "createdAt": "LocalDateTime (auto-set)",
+        "updatedAt": "LocalDateTime (auto-set)"
+      },
+      "relationships": {
+        "currentLocation": "ManyToOne → Location (optional)",
+        "lastUsedBy": "ManyToOne → User (optional)",
+        "transactions": "OneToMany → Transaction"
+      }
+    },
+    {
+      "name": "DemandHistory",
+      "table": "demand_history",
+      "description": "Historical demand data for AI forecasting",
+      "fields": {
+        "id": "UUID (PK, auto-generated)"
+      },
+      "relationships": {
+        "product": "ManyToOne → Product"
+      }
+    },
+    {
+      "name": "OpenPurchaseOrder",
+      "table": "open_purchase_orders",
+      "description": "Legacy order entity used by /orders endpoints",
+      "fields": {
+        "taskId": "UUID (PK, auto-generated)",
+        "packageId": "String (max 100)",
+        "weightKg": "Double",
+        "fragile": "Boolean",
+        "fromLocation": "String (max 150)",
+        "toLocation": "String (max 150)",
+        "transferPath": "List<String> (ElementCollection)",
+        "assignedWorkerId": "String (max 100)",
+        "taskType": "TaskType enum (RECEIPT, TRANSFER, PICKING, DELIVERY)",
+        "status": "TaskStatus enum (CREATED, PICKED, COMPLETED)",
+        "scanStep": "Integer (default 0)",
+        "createdAt": "LocalDateTime (auto-set)",
+        "pickedAt": "LocalDateTime",
+        "completedAt": "LocalDateTime"
+      }
+    },
+    {
+      "name": "ReorderPolicy",
+      "table": "reorder_policies",
+      "description": "Reorder thresholds for AI-driven inventory management",
+      "fields": {
+        "id": "UUID (PK, auto-generated)"
+      },
+      "relationships": {
+        "product": "ManyToOne → Product"
+      }
+    },
+    {
+      "name": "SupplyLeadTime",
+      "table": "supply_lead_times",
+      "description": "Supplier lead time data for AI forecasting",
+      "fields": {
+        "id": "UUID (PK, auto-generated)"
+      }
+    }
+  ],
+  "enums": [
+    { "name": "Role", "values": ["ADMIN", "SUPERVISOR", "EMPLOYEE"] },
+    { "name": "TransactionType", "values": ["RECEIPT", "TRANSFER", "PICKING", "DELIVERY"] },
+    { "name": "TransactionStatus", "values": ["DRAFT", "PENDING", "IN_PROGRESS", "COMPLETED", "CANCELLED", "FAILED"] },
+    { "name": "Priority", "values": ["LOW", "MEDIUM", "HIGH", "URGENT"] },
+    { "name": "ChariotStatus", "values": ["AVAILABLE", "IN_USE", "MAINTENANCE", "RETIRED"] },
+    { "name": "IssueType", "values": ["MISSING", "DAMAGED", "EXCESS", "WRONG_LOCATION", "NOT_FOUND", "INSUFFICIENT_STOCK"] },
+    { "name": "MovementType", "values": ["IN", "OUT", "ADJUSTMENT"] },
+    { "name": "AiDecisionType", "values": ["STORAGE_ASSIGNMENT", "PICKING_ROUTE", "PREPARATION_FORECAST"] },
+    { "name": "LocationType", "values": ["RECEIVING", "STORAGE", "PICKING", "SHIPPING", "QC", "STAGING"] },
+    { "name": "TaskType", "values": ["RECEIPT", "TRANSFER", "PICKING", "DELIVERY"] },
+    { "name": "TaskStatus", "values": ["CREATED", "PICKED", "COMPLETED"] },
+    { "name": "Permission", "values": ["PRODUCT_READ", "PRODUCT_WRITE", "INVENTORY_READ", "INVENTORY_WRITE", "LOCATION_READ", "LOCATION_WRITE", "OPERATION_READ", "OPERATION_WRITE", "USER_READ", "USER_WRITE", "DASHBOARD_READ"] }
+  ]
+}

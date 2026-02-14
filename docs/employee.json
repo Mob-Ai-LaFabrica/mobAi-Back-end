@@ -1,0 +1,290 @@
+{
+  "apiVersion": "v1",
+  "baseUrl": "/api",
+  "role": "EMPLOYEE",
+  "description": "Minimal MVP endpoints for EMPLOYEE role - employees only execute tasks, no master data access",
+  "controllers": [
+    {
+      "name": "AuthController",
+      "basePath": "/auth",
+      "description": "Authentication only",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/login",
+          "operationId": "login",
+          "summary": "Employee login",
+          "security": "PUBLIC",
+          "requestBody": {
+            "username": "string",
+            "password": "string"
+          },
+          "responses": {
+            "200": {
+              "accessToken": "string (JWT)",
+              "user": {
+                "id": "UUID",
+                "username": "string",
+                "fullName": "string",
+                "role": "string"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/logout",
+          "operationId": "logout",
+          "summary": "Employee logout",
+          "security": "BEARER_TOKEN",
+          "responses": {
+            "200": "success"
+          }
+        }
+      ]
+    },
+    {
+      "name": "TaskController",
+      "basePath": "/tasks",
+      "description": "View and manage assigned tasks",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/my-tasks",
+          "operationId": "getMyTasks",
+          "summary": "Get all my assigned tasks",
+          "security": "BEARER_TOKEN",
+          "queryParameters": [
+            {
+              "name": "status",
+              "type": "string",
+              "required": false,
+              "enum": ["PENDING", "IN_PROGRESS", "COMPLETED"]
+            }
+          ],
+          "responses": {
+            "200": {
+              "type": "array",
+              "items": {
+                "id": "UUID",
+                "type": "string (RECEIPT/TRANSFER/PICKING/DELIVERY)",
+                "reference": "string",
+                "status": "string",
+                "priority": "string",
+                "assignedAt": "LocalDateTime"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/{taskId}",
+          "operationId": "getTaskDetails",
+          "summary": "Get task details with all lines",
+          "description": "Returns full task with product and location details for each line",
+          "security": "BEARER_TOKEN",
+          "pathParameters": [
+            {
+              "name": "taskId",
+              "type": "UUID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "id": "UUID",
+              "type": "string",
+              "reference": "string",
+              "status": "string",
+              "lines": [
+                {
+                  "lineNumber": "integer",
+                  "product": {
+                    "id": "UUID",
+                    "sku": "string",
+                    "name": "string",
+                    "unitOfMeasure": "string"
+                  },
+                  "quantity": "integer",
+                  "sourceLocation": {
+                    "id": "UUID",
+                    "code": "string",
+                    "type": "string"
+                  },
+                  "destinationLocation": {
+                    "id": "UUID",
+                    "code": "string",
+                    "type": "string"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "OperationsController",
+      "basePath": "/operations",
+      "description": "Execute ALL warehouse operations (consolidated)",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/start",
+          "operationId": "startOperation",
+          "summary": "Start ANY operation (receipt, transfer, picking, delivery)",
+          "description": "Universal start endpoint for all operation types",
+          "security": "BEARER_TOKEN",
+          "requestBody": {
+            "transactionId": "UUID",
+            "chariotId": "UUID (optional)"
+          },
+          "responses": {
+            "200": {
+              "transactionId": "UUID",
+              "type": "string",
+              "status": "string (IN_PROGRESS)",
+              "startedAt": "LocalDateTime"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/execute-line",
+          "operationId": "executeOperationLine",
+          "summary": "Execute a single line (scan and move product)",
+          "description": "Universal execution endpoint - validates barcode and updates stock. Returns product details after scanning.",
+          "security": "BEARER_TOKEN",
+          "requestBody": {
+            "transactionId": "UUID",
+            "lineNumber": "integer",
+            "productBarcode": "string (scanned)",
+            "quantity": "integer",
+            "sourceLocationCode": "string (optional - null for receipt, scanned)",
+            "destinationLocationCode": "string (optional - null for delivery, scanned)"
+          },
+          "responses": {
+            "200": {
+              "lineNumber": "integer",
+              "status": "string (COMPLETED)",
+              "product": {
+                "id": "UUID",
+                "sku": "string",
+                "name": "string",
+                "unitOfMeasure": "string"
+              },
+              "message": "string (e.g., 'Product scanned successfully')"
+            },
+            "400": {
+              "error": "string (e.g., 'Wrong product scanned', 'Insufficient stock', 'Wrong location')"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/report-issue",
+          "operationId": "reportIssue",
+          "summary": "Report ANY issue during operations",
+          "description": "Universal issue reporting for all operation types",
+          "security": "BEARER_TOKEN",
+          "requestBody": {
+            "transactionId": "UUID",
+            "lineNumber": "integer (optional)",
+            "productId": "UUID (from task details)",
+            "issueType": "string (MISSING/DAMAGED/EXCESS/NOT_FOUND/INSUFFICIENT_STOCK)",
+            "expectedQuantity": "integer (optional)",
+            "actualQuantity": "integer (optional)",
+            "notes": "string (optional)"
+          },
+          "responses": {
+            "201": {
+              "discrepancyId": "UUID",
+              "reportedAt": "LocalDateTime"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/{transactionId}/complete",
+          "operationId": "completeOperation",
+          "summary": "Complete ANY operation",
+          "description": "Universal completion endpoint for all operation types",
+          "security": "BEARER_TOKEN",
+          "pathParameters": [
+            {
+              "name": "transactionId",
+              "type": "UUID"
+            }
+          ],
+          "requestBody": {
+            "notes": "string (optional)",
+            "status": "string (required, COMPLETED or FAILED)",
+            "failureReason": "string (optional - only if status=FAILED)"
+          },
+          "responses": {
+            "200": {
+              "transactionId": "UUID",
+              "status": "string",
+              "completedAt": "LocalDateTime"
+            }
+          }
+        }
+      ]
+    }
+  ],
+
+  "requestDTOs": [
+    {
+      "name": "LoginRequest",
+      "fields": {
+        "username": "string (required)",
+        "password": "string (required)"
+      }
+    },
+    {
+      "name": "StartOperationRequest",
+      "fields": {
+        "transactionId": "UUID (required)",
+        "chariotId": "UUID (optional)"
+      }
+    },
+    {
+      "name": "ExecuteLineRequest",
+      "fields": {
+        "transactionId": "UUID (required)",
+        "lineNumber": "integer (required)",
+        "productBarcode": "string (required - scanned by employee)",
+        "quantity": "integer (required)",
+        "sourceLocationCode": "string (optional - scanned if applicable)",
+        "destinationLocationCode": "string (optional - scanned if applicable)"
+      }
+    },
+    {
+      "name": "ReportIssueRequest",
+      "fields": {
+        "transactionId": "UUID (required)",
+        "lineNumber": "integer (optional)",
+        "productId": "UUID (required - from task details)",
+        "issueType": "string (required)",
+        "expectedQuantity": "integer (optional)",
+        "actualQuantity": "integer (optional)",
+        "notes": "string (optional)"
+      }
+    },
+    {
+      "name": "CompleteOperationRequest",
+      "fields": {
+        "notes": "string (optional)",
+        "status": "string (required, COMPLETED or FAILED)",
+        "failureReason": "string (optional)"
+      }
+    }
+  ],
+  "workflowExample": {
+    "step1": "Employee calls GET /tasks/my-tasks → sees assigned tasks",
+    "step2": "Employee calls GET /tasks/{taskId} → sees full task with products and locations",
+    "step3": "Employee calls POST /operations/start → starts the task",
+    "step4": "Employee scans product barcode and locations, calls POST /operations/execute-line → system validates and returns product info",
+    "step5": "Repeat step 4 for each line",
+    "step6": "Employee calls POST /operations/{transactionId}/complete → finishes task"
+  }
+}

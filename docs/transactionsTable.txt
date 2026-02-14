@@ -1,0 +1,7 @@
+id_transaction	type_transaction	reference_transaction	cree_le	cree_par_id_utilisateur	statut	notes
+texte	texte	texte	datetime	texte	texte	texte
+O	O	O	O	O	O	N
+
+example rows:
+T0001	RECEIPT	RCV-2026-0001	03/02/2026 09:15	U001	CONFIRMED	Inbound from supplier X
+BL/ME25/03449	DELIVERY	BL/ME25/03449	03/12/2025	U001	CONFIRMED	Outbound to customer id ME005

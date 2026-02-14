@@ -34,5 +34,6 @@ public class RegisterRequest {
     @Size(max = 100, message = "Last name must not exceed 100 characters")
     private String lastName;
 
+    @Builder.Default
     private Role role = Role.EMPLOYEE; // Default role
 }

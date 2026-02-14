@@ -1,0 +1,6 @@
+id_produit	stock_securite	quantite_min_commande	taille_lot
+texte	nombre	nombre	nombre
+O	N	N	N
+
+example row:
+P001	10	20	5

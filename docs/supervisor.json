@@ -1,0 +1,1035 @@
+{
+    "apiVersion": "v1",
+    "baseUrl": "/api",
+    "role": "SUPERVISOR",
+    "description": "Supervisor role endpoints - task management, AI decision review, discrepancy resolution, monitoring, inventory overview, and read-only access to products/locations/users",
+    "controllers": [
+        {
+            "name": "AuthController",
+            "basePath": "/auth",
+            "description": "Authentication",
+            "endpoints": [
+                {
+                    "method": "POST",
+                    "path": "/login",
+                    "operationId": "login",
+                    "summary": "Supervisor login",
+                    "security": "PUBLIC",
+                    "requestBody": {
+                        "username": "string",
+                        "password": "string"
+                    },
+                    "responses": {
+                        "200": {
+                            "accessToken": "string (JWT)",
+                            "user": {
+                                "id": "UUID",
+                                "username": "string",
+                                "fullName": "string",
+                                "role": "SUPERVISOR"
+                            }
+                        }
+                    }
+                },
+                {
+                    "method": "POST",
+                    "path": "/logout",
+                    "operationId": "logout",
+                    "summary": "Supervisor logout",
+                    "security": "BEARER_TOKEN",
+                    "responses": {
+                        "200": "success"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "TaskManagementController",
+            "basePath": "/tasks",
+            "description": "Create, assign, reassign, and delete tasks",
+            "endpoints": [
+                {
+                    "method": "POST",
+                    "path": "/create",
+                    "operationId": "createTask",
+                    "summary": "Create a new task/transaction",
+                    "security": "BEARER_TOKEN",
+                    "requestBody": {
+                        "type": "string (RECEIPT/TRANSFER/PICKING/DELIVERY)",
+                        "reference": "string (optional, auto-generated if not provided)",
+                        "priority": "string (optional, default MEDIUM - LOW/MEDIUM/HIGH/URGENT)",
+                        "assignedToId": "UUID (optional)",
+                        "notes": "string (optional)"
+                    },
+                    "responses": {
+                        "201": {
+                            "id": "UUID",
+                            "type": "string",
+                            "reference": "string",
+                            "status": "PENDING",
+                            "priority": "string",
+                            "createdAt": "LocalDateTime",
+                            "assignedTo": {
+                                "id": "UUID",
+                                "username": "string",
+                                "fullName": "string"
+                            }
+                        }
+                    }
+                },
+                {
+                    "method": "PUT",
+                    "path": "/{id}/assign",
+                    "operationId": "assignTask",
+                    "summary": "Assign a task to an employee",
+                    "security": "BEARER_TOKEN",
+                    "pathParameters": [
+                        {
+                            "name": "id",
+                            "type": "UUID"
+                        }
+                    ],
+                    "requestBody": {
+                        "assignedToId": "UUID (required)"
+                    },
+                    "responses": {
+                        "200": {
+                            "id": "UUID",
+                            "status": "string",
+                            "assignedTo": {
+                                "id": "UUID",
+                                "username": "string",
+                                "fullName": "string"
+                            },
+                            "assignedAt": "LocalDateTime"
+                        }
+                    }
+                },
+                {
+                    "method": "GET",
+                    "path": "",
+                    "operationId": "getAllTasks",
+                    "summary": "Get all tasks (not just mine)",
+                    "security": "BEARER_TOKEN",
+                    "queryParameters": [
+                        {
+                            "name": "status",
+                            "type": "string",
+                            "required": false,
+                            "enum": [
+                                "DRAFT",
+                                "PENDING",
+                                "IN_PROGRESS",
+                                "COMPLETED",
+                                "CANCELLED",
+                                "FAILED"
+                            ]
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "type": "array",
+                            "items": {
+                                "id": "UUID",
+                                "type": "string",
+                                "reference": "string",
+                                "status": "string",
+                                "priority": "string",
+                                "createdAt": "LocalDateTime",
+                                "assignedAt": "LocalDateTime",
+                                "assignedTo": {
+                                    "id": "UUID",
+                                    "username": "string",
+                                    "fullName": "string"
+                                },
+                                "notes": "string"
+                            }
+                        }
+                    }
+                },
+                {
+                    "method": "PUT",
+                    "path": "/{id}/reassign",
+                    "operationId": "reassignTask",
+                    "summary": "Reassign a task to a different employee",
+                    "security": "BEARER_TOKEN",
+                    "pathParameters": [
+                        {
+                            "name": "id",
+                            "type": "UUID"
+                        }
+                    ],
+                    "requestBody": {
+                        "assignedToId": "UUID (required)"
+                    },
+                    "responses": {
+                        "200": {
+                            "id": "UUID",
+                            "assignedTo": {
+                                "id": "UUID",
+                                "username": "string",
+                                "fullName": "string"
+                            },
+                            "assignedAt": "LocalDateTime"
+                        }
+                    }
+                },
+                {
+                    "method": "DELETE",
+                    "path": "/{id}",
+                    "operationId": "deleteTask",
+                    "summary": "Delete a task",
+                    "security": "BEARER_TOKEN",
+                    "pathParameters": [
+                        {
+                            "name": "id",
+                            "type": "UUID"
+                        }
+                    ],
+                    "responses": {
+                        "200": "Task deleted successfully"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "AiDecisionController",
+            "basePath": "/ai-decisions",
+            "description": "Review and override AI decisions",
+            "endpoints": [
+                {
+                    "method": "GET",
+                    "path": "",
+                    "operationId": "getAllAiDecisions",
+                    "summary": "Get all AI decisions",
+                    "security": "BEARER_TOKEN",
+                    "responses": {
+                        "200": {
+                            "type": "array",
+                            "items": {
+                                "id": "UUID",
+                                "decisionType": "string (STORAGE_ASSIGNMENT/PICKING_ROUTE/PREPARATION_FORECAST)",
+                                "entityType": "string",
+                                "entityId": "UUID",
+                                "aiSuggestion": "string",
+                                "finalDecision": "string",
+                                "wasOverridden": "boolean",
+                                "confidence": "double",
+                                "createdAt": "LocalDateTime"
+                            }
+                        }
+                    }
+                },
+                {
+                    "method": "GET",
+                    "path": "/{id}",
+                    "operationId": "getAiDecision",
+                    "summary": "Get AI decision details",
+                    "security": "BEARER_TOKEN",
+                    "pathParameters": [
+                        {
+                            "name": "id",
+                            "type": "UUID"
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "id": "UUID",
+                            "decisionType": "string",
+                            "entityType": "string",
+                            "entityId": "UUID",
+                            "aiSuggestion": "string",
+                            "finalDecision": "string",
+                            "wasOverridden": "boolean",
+                            "overrideReason": "string",
+                            "confidence": "double",
+                            "createdAt": "LocalDateTime",
+                            "overriddenAt": "LocalDateTime",
+                            "overriddenBy": {
+                                "id": "UUID",
+                                "username": "string"
+                            }
+                        }
+                    }
+                },
+                {
+                    "method": "POST",
+                    "path": "/{id}/approve",
+                    "operationId": "approveAiDecision",
+                    "summary": "Approve an AI decision",
+                    "security": "BEARER_TOKEN",
+                    "pathParameters": [
+                        {
+                            "name": "id",
+                            "type": "UUID"
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "id": "UUID",
+                            "wasOverridden": false,
+                            "overriddenAt": "LocalDateTime"
+                        }
+                    }
+                },
+                {
+                    "method": "POST",
+                    "path": "/{id}/override",
+                    "operationId": "overrideAiDecision",
+                    "summary": "Override an AI decision with a new one",
+                    "security": "BEARER_TOKEN",
+                    "pathParameters": [
+                        {
+                            "name": "id",
+                            "type": "UUID"
+                        }
+                    ],
+                    "requestBody": {
+                        "newDecision": "string (required)",
+                        "reason": "string (required)"
+                    },
+                    "responses": {
+                        "200": {
+                            "id": "UUID",
+                            "wasOverridden": true,
+                            "finalDecision": "string",
+                            "overrideReason": "string",
+                            "overriddenAt": "LocalDateTime"
+                        }
+                    }
+                },
+                {
+                    "method": "GET",
+                    "path": "/pending-review",
+                    "operationId": "getPendingReview",
+                    "summary": "Get AI decisions pending supervisor review",
+                    "security": "BEARER_TOKEN",
+                    "responses": {
+                        "200": {
+                            "type": "array",
+                            "items": {
+                                "id": "UUID",
+                                "decisionType": "string",
+                                "aiSuggestion": "string",
+                                "confidence": "double",
+                                "createdAt": "LocalDateTime"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "DiscrepancyController",
+            "basePath": "/discrepancies",
+            "description": "View and resolve discrepancies reported during operations",
+            "endpoints": [
+                {
+                    "method": "GET",
+                    "path": "",
+                    "operationId": "getAllDiscrepancies",
+                    "summary": "Get all discrepancies",
+                    "security": "BEARER_TOKEN",
+                    "responses": {
+                        "200": {
+                            "type": "array",
+                            "items": {
+                                "id": "UUID",
+                                "transactionId": "UUID",
+                                "productId": "UUID",
+                                "productSku": "string",
+                                "issueType": "string (MISSING/DAMAGED/EXCESS/WRONG_LOCATION/NOT_FOUND/INSUFFICIENT_STOCK)",
+                                "expectedQuantity": "integer",
+                                "actualQuantity": "integer",
+                                "reportedAt": "LocalDateTime",
+                                "resolution": "string",
+                                "resolvedAt": "LocalDateTime"
+                            }
+                        }
+                    }
+                },
+                {
+                    "method": "GET",
+                    "path": "/{id}",
+                    "operationId": "getDiscrepancy",
+                    "summary": "Get discrepancy details",
+                    "security": "BEARER_TOKEN",
+                    "pathParameters": [
+                        {
+                            "name": "id",
+                            "type": "UUID"
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "id": "UUID",
+                            "transactionId": "UUID",
+                            "productId": "UUID",
+                            "productSku": "string",
+                            "issueType": "string",
+                            "expectedQuantity": "integer",
+                            "actualQuantity": "integer",
+                            "reportedAt": "LocalDateTime",
+                            "reportedBy": {
+                                "id": "UUID",
+                                "username": "string"
+                            },
+                            "resolution": "string",
+                            "resolvedAt": "LocalDateTime",
+                            "resolvedBy": {
+                                "id": "UUID",
+                                "username": "string"
+                            },
+                            "notes": "string"
+                        }
+                    }
+                },
+                {
+                    "method": "PUT",
+                    "path": "/{id}/resolve",
+                    "operationId": "resolveDiscrepancy",
+                    "summary": "Resolve a discrepancy",
+                    "security": "BEARER_TOKEN",
+                    "pathParameters": [
+                        {
+                            "name": "id",
+                            "type": "UUID"
+                        }
+                    ],
+                    "requestBody": {
+                        "resolution": "string (required)",
+                        "notes": "string (optional)"
+                    },
+                    "responses": {
+                        "200": {
+                            "id": "UUID",
+                            "resolution": "string",
+                            "resolvedAt": "LocalDateTime",
+                            "resolvedBy": {
+                                "id": "UUID",
+                                "username": "string"
+                            }
+                        }
+                    }
+                },
+                {
+                    "method": "GET",
+                    "path": "/unresolved",
+                    "operationId": "getUnresolvedDiscrepancies",
+                    "summary": "Get all unresolved discrepancies",
+                    "security": "BEARER_TOKEN",
+                    "responses": {
+                        "200": {
+                            "type": "array",
+                            "items": {
+                                "id": "UUID",
+                                "issueType": "string",
+                                "productSku": "string",
+                                "reportedAt": "LocalDateTime"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "MonitoringController",
+            "basePath": "/monitoring",
+            "description": "Real-time operations monitoring",
+            "endpoints": [
+                {
+                    "method": "GET",
+                    "path": "/active-operations",
+                    "operationId": "getActiveOperations",
+                    "summary": "Get all active (in-progress) operations",
+                    "security": "BEARER_TOKEN",
+                    "responses": {
+                        "200": {
+                            "type": "array",
+                            "items": {
+                                "id": "UUID",
+                                "type": "string",
+                                "reference": "string",
+                                "status": "IN_PROGRESS",
+                                "priority": "string",
+                                "startedAt": "LocalDateTime",
+                                "assignedTo": {
+                                    "id": "UUID",
+                                    "username": "string",
+                                    "fullName": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "method": "GET",
+                    "path": "/employee-status",
+                    "operationId": "getEmployeeStatus",
+                    "summary": "Get status of all employees (busy/available)",
+                    "security": "BEARER_TOKEN",
+                    "responses": {
+                        "200": {
+                            "type": "array",
+                            "items": {
+                                "id": "UUID",
+                                "username": "string",
+                                "fullName": "string",
+                                "status": "string (BUSY/AVAILABLE)",
+                                "currentTask": {
+                                    "id": "UUID",
+                                    "type": "string",
+                                    "reference": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "method": "GET",
+                    "path": "/chariot-status",
+                    "operationId": "getChariotStatus",
+                    "summary": "Get status of all chariots",
+                    "security": "BEARER_TOKEN",
+                    "responses": {
+                        "200": {
+                            "type": "array",
+                            "items": {
+                                "id": "UUID",
+                                "code": "string",
+                                "status": "string (AVAILABLE/IN_USE/MAINTENANCE/RETIRED)",
+                                "currentLocation": {
+                                    "id": "UUID",
+                                    "code": "string"
+                                },
+                                "lastUsedBy": {
+                                    "id": "UUID",
+                                    "username": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "notes": "GET /monitoring/zone-occupancy skipped for MVP"
+        },
+        {
+            "name": "ProductController",
+            "basePath": "/products",
+            "description": "Read-only product access",
+            "endpoints": [
+                {
+                    "method": "GET",
+                    "path": "",
+                    "operationId": "getAllProducts",
+                    "summary": "Get all products",
+                    "security": "BEARER_TOKEN",
+                    "responses": {
+                        "200": {
+                            "type": "array",
+                            "items": {
+                                "id": "UUID",
+                                "sku": "string",
+                                "name": "string",
+                                "unitOfMeasure": "string",
+                                "category": "string",
+                                "active": "boolean"
+                            }
+                        }
+                    }
+                },
+                {
+                    "method": "GET",
+                    "path": "/{id}",
+                    "operationId": "getProduct",
+                    "summary": "Get product by ID",
+                    "security": "BEARER_TOKEN",
+                    "pathParameters": [
+                        {
+                            "name": "id",
+                            "type": "UUID"
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "id": "UUID",
+                            "sku": "string",
+                            "name": "string",
+                            "unitOfMeasure": "string",
+                            "category": "string",
+                            "active": "boolean"
+                        }
+                    }
+                },
+                {
+                    "method": "GET",
+                    "path": "/search",
+                    "operationId": "searchProducts",
+                    "summary": "Search products by name or SKU",
+                    "security": "BEARER_TOKEN",
+                    "queryParameters": [
+                        {
+                            "name": "query",
+                            "type": "string",
+                            "required": true
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "type": "array",
+                            "items": {
+                                "id": "UUID",
+                                "sku": "string",
+                                "name": "string",
+                                "unitOfMeasure": "string",
+                                "category": "string"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "LocationController",
+            "basePath": "/locations",
+            "description": "Read-only location access",
+            "endpoints": [
+                {
+                    "method": "GET",
+                    "path": "",
+                    "operationId": "getAllLocations",
+                    "summary": "Get all locations",
+                    "security": "BEARER_TOKEN",
+                    "responses": {
+                        "200": {
+                            "type": "array",
+                            "items": {
+                                "id": "UUID",
+                                "code": "string",
+                                "zone": "string",
+                                "type": "string",
+                                "active": "boolean"
+                            }
+                        }
+                    }
+                },
+                {
+                    "method": "GET",
+                    "path": "/{id}",
+                    "operationId": "getLocation",
+                    "summary": "Get location by ID",
+                    "security": "BEARER_TOKEN",
+                    "pathParameters": [
+                        {
+                            "name": "id",
+                            "type": "UUID"
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "id": "UUID",
+                            "code": "string",
+                            "zone": "string",
+                            "type": "string",
+                            "active": "boolean"
+                        }
+                    }
+                },
+                {
+                    "method": "GET",
+                    "path": "/search",
+                    "operationId": "searchLocations",
+                    "summary": "Search locations by code or zone",
+                    "security": "BEARER_TOKEN",
+                    "queryParameters": [
+                        {
+                            "name": "query",
+                            "type": "string",
+                            "required": true
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "type": "array",
+                            "items": {
+                                "id": "UUID",
+                                "code": "string",
+                                "zone": "string",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "StockController",
+            "basePath": "/stock",
+            "description": "Inventory overview",
+            "endpoints": [
+                {
+                    "method": "GET",
+                    "path": "/summary",
+                    "operationId": "getStockSummary",
+                    "summary": "Get stock summary (aggregate totals)",
+                    "security": "BEARER_TOKEN",
+                    "responses": {
+                        "200": {
+                            "totalEntries": "long",
+                            "totalProducts": "long",
+                            "totalLocations": "long"
+                        }
+                    }
+                },
+                {
+                    "method": "GET",
+                    "path": "/by-product/{id}",
+                    "operationId": "getStockByProduct",
+                    "summary": "Get stock entries for a specific product",
+                    "security": "BEARER_TOKEN",
+                    "pathParameters": [
+                        {
+                            "name": "id",
+                            "type": "UUID"
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "type": "array",
+                            "items": {
+                                "id": "UUID",
+                                "movementType": "string (IN/OUT/ADJUSTMENT)",
+                                "quantity": "integer",
+                                "runningBalance": "integer",
+                                "performedAt": "LocalDateTime",
+                                "product": {
+                                    "id": "UUID",
+                                    "sku": "string",
+                                    "name": "string"
+                                },
+                                "location": {
+                                    "id": "UUID",
+                                    "code": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "method": "GET",
+                    "path": "/by-location/{id}",
+                    "operationId": "getStockByLocation",
+                    "summary": "Get stock entries for a specific location",
+                    "security": "BEARER_TOKEN",
+                    "pathParameters": [
+                        {
+                            "name": "id",
+                            "type": "UUID"
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "type": "array",
+                            "items": {
+                                "id": "UUID",
+                                "movementType": "string",
+                                "quantity": "integer",
+                                "runningBalance": "integer",
+                                "performedAt": "LocalDateTime",
+                                "product": {
+                                    "id": "UUID",
+                                    "sku": "string",
+                                    "name": "string"
+                                },
+                                "location": {
+                                    "id": "UUID",
+                                    "code": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "method": "GET",
+                    "path": "/ledger",
+                    "operationId": "getStockLedger",
+                    "summary": "Get full stock ledger (all movements)",
+                    "security": "BEARER_TOKEN",
+                    "responses": {
+                        "200": {
+                            "type": "array",
+                            "items": {
+                                "id": "UUID",
+                                "movementType": "string",
+                                "quantity": "integer",
+                                "runningBalance": "integer",
+                                "performedAt": "LocalDateTime",
+                                "product": {
+                                    "id": "UUID",
+                                    "sku": "string",
+                                    "name": "string"
+                                },
+                                "location": {
+                                    "id": "UUID",
+                                    "code": "string"
+                                },
+                                "transactionId": "UUID"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ChariotController",
+            "basePath": "/chariots",
+            "description": "Chariot management",
+            "endpoints": [
+                {
+                    "method": "GET",
+                    "path": "",
+                    "operationId": "getAllChariots",
+                    "summary": "Get all chariots",
+                    "security": "BEARER_TOKEN",
+                    "responses": {
+                        "200": {
+                            "type": "array",
+                            "items": {
+                                "id": "UUID",
+                                "code": "string",
+                                "status": "string (AVAILABLE/IN_USE/MAINTENANCE/RETIRED)",
+                                "active": "boolean",
+                                "currentLocation": {
+                                    "id": "UUID",
+                                    "code": "string"
+                                },
+                                "lastUsedBy": {
+                                    "id": "UUID",
+                                    "username": "string"
+                                },
+                                "lastUsedAt": "LocalDateTime"
+                            }
+                        }
+                    }
+                },
+                {
+                    "method": "PUT",
+                    "path": "/{id}/assign",
+                    "operationId": "assignChariot",
+                    "summary": "Assign a chariot to an employee",
+                    "security": "BEARER_TOKEN",
+                    "pathParameters": [
+                        {
+                            "name": "id",
+                            "type": "UUID"
+                        }
+                    ],
+                    "requestBody": {
+                        "userId": "UUID (required)"
+                    },
+                    "responses": {
+                        "200": {
+                            "id": "UUID",
+                            "code": "string",
+                            "status": "IN_USE",
+                            "lastUsedBy": {
+                                "id": "UUID",
+                                "username": "string"
+                            }
+                        }
+                    }
+                },
+                {
+                    "method": "PUT",
+                    "path": "/{id}/release",
+                    "operationId": "releaseChariot",
+                    "summary": "Release a chariot (mark as available)",
+                    "security": "BEARER_TOKEN",
+                    "pathParameters": [
+                        {
+                            "name": "id",
+                            "type": "UUID"
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "id": "UUID",
+                            "code": "string",
+                            "status": "AVAILABLE"
+                        }
+                    }
+                },
+                {
+                    "method": "PUT",
+                    "path": "/{id}/maintenance",
+                    "operationId": "setChariotMaintenance",
+                    "summary": "Set chariot to maintenance mode",
+                    "security": "BEARER_TOKEN",
+                    "pathParameters": [
+                        {
+                            "name": "id",
+                            "type": "UUID"
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "id": "UUID",
+                            "code": "string",
+                            "status": "MAINTENANCE"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "UserController",
+            "basePath": "/users",
+            "description": "View employees",
+            "endpoints": [
+                {
+                    "method": "GET",
+                    "path": "",
+                    "operationId": "getAllUsers",
+                    "summary": "Get all users",
+                    "security": "BEARER_TOKEN",
+                    "responses": {
+                        "200": {
+                            "type": "array",
+                            "items": {
+                                "id": "UUID",
+                                "username": "string",
+                                "email": "string",
+                                "firstName": "string",
+                                "lastName": "string",
+                                "fullName": "string",
+                                "role": "string (ADMIN/SUPERVISOR/EMPLOYEE)",
+                                "active": "boolean"
+                            }
+                        }
+                    }
+                },
+                {
+                    "method": "GET",
+                    "path": "/{id}",
+                    "operationId": "getUser",
+                    "summary": "Get user by ID",
+                    "security": "BEARER_TOKEN",
+                    "pathParameters": [
+                        {
+                            "name": "id",
+                            "type": "UUID"
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "id": "UUID",
+                            "username": "string",
+                            "email": "string",
+                            "firstName": "string",
+                            "lastName": "string",
+                            "fullName": "string",
+                            "role": "string",
+                            "active": "boolean"
+                        }
+                    }
+                },
+                {
+                    "method": "GET",
+                    "path": "/{id}/current-task",
+                    "operationId": "getCurrentTask",
+                    "summary": "Get user's current active task",
+                    "security": "BEARER_TOKEN",
+                    "pathParameters": [
+                        {
+                            "name": "id",
+                            "type": "UUID"
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "userId": "UUID",
+                            "username": "string",
+                            "currentTask": {
+                                "id": "UUID",
+                                "type": "string",
+                                "reference": "string",
+                                "status": "string",
+                                "startedAt": "LocalDateTime"
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "requestDTOs": [
+        {
+            "name": "LoginRequest",
+            "fields": {
+                "username": "string (required)",
+                "password": "string (required)"
+            }
+        },
+        {
+            "name": "CreateTaskRequest",
+            "fields": {
+                "type": "TransactionType (required - RECEIPT/TRANSFER/PICKING/DELIVERY)",
+                "reference": "string (optional - auto-generated if not provided)",
+                "priority": "Priority (optional - LOW/MEDIUM/HIGH/URGENT, default MEDIUM)",
+                "assignedToId": "UUID (optional)",
+                "notes": "string (optional)"
+            }
+        },
+        {
+            "name": "TaskAssignRequest",
+            "fields": {
+                "assignedToId": "UUID (required)"
+            }
+        },
+        {
+            "name": "AiDecisionOverrideRequest",
+            "fields": {
+                "newDecision": "string (required)",
+                "reason": "string (required)"
+            }
+        },
+        {
+            "name": "ResolveDiscrepancyRequest",
+            "fields": {
+                "resolution": "string (required)",
+                "notes": "string (optional)"
+            }
+        },
+        {
+            "name": "ChariotAssignRequest",
+            "fields": {
+                "userId": "UUID (required)"
+            }
+        }
+    ],
+    "workflowExamples": {
+        "taskManagement": {
+            "step1": "Supervisor calls GET /tasks → sees all tasks",
+            "step2": "Supervisor calls POST /tasks/create → creates new task",
+            "step3": "Supervisor calls PUT /tasks/{id}/assign → assigns to employee",
+            "step4": "Supervisor calls PUT /tasks/{id}/reassign → reassigns if needed",
+            "step5": "Supervisor calls DELETE /tasks/{id} → removes task"
+        },
+        "aiDecisionReview": {
+            "step1": "Supervisor calls GET /ai-decisions/pending-review → sees unreviewed decisions",
+            "step2": "Supervisor calls GET /ai-decisions/{id} → reviews details",
+            "step3a": "Supervisor calls POST /ai-decisions/{id}/approve → accepts AI suggestion",
+            "step3b": "Supervisor calls POST /ai-decisions/{id}/override → overrides with new decision"
+        },
+        "discrepancyResolution": {
+            "step1": "Supervisor calls GET /discrepancies/unresolved → sees open issues",
+            "step2": "Supervisor calls GET /discrepancies/{id} → reviews details",
+            "step3": "Supervisor calls PUT /discrepancies/{id}/resolve → resolves issue"
+        },
+        "monitoring": {
+            "step1": "Supervisor calls GET /monitoring/active-operations → sees live operations",
+            "step2": "Supervisor calls GET /monitoring/employee-status → sees who is busy/available",
+            "step3": "Supervisor calls GET /monitoring/chariot-status → sees chariot availability"
+        }
+    }
+}

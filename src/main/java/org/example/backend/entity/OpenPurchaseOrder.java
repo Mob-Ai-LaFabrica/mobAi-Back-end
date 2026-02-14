@@ -1,32 +1,21 @@
 package org.example.backend.entity;
 
-import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.example.backend.enums.TaskStatus;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.time.LocalDate;
 
 @Entity
-@Table(name = "open_purchase_orders")
+@Table(name = "cmd_achat_ouvertes_opt")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -35,70 +24,20 @@ import java.util.UUID;
 public class OpenPurchaseOrder {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID taskId;
+    @Column(name = "id_commande_achat", nullable = false, length = 50)
+    private String idCommandeAchat;
 
-    @Column(nullable = false, length = 100)
-    private String packageId;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "id_produit", nullable = false)
+    private Product product;
 
-    @Column(nullable = false)
-    private Double weightKg;
+    @Column(name = "quantite_commandee", nullable = false)
+    private Integer quantiteCommandee;
 
-    @Column(nullable = false)
-    private Boolean fragile;
+    @Column(name = "date_reception_prevue", nullable = false)
+    private LocalDate dateReceptionPrevue;
 
-    @Column(nullable = false, length = 150)
-    private String fromLocation;
-
-    @Column(nullable = false, length = 150)
-    private String toLocation;
-
-    @ElementCollection
-    @CollectionTable(name = "open_purchase_order_transfer_path", joinColumns = @JoinColumn(name = "task_id"))
-    @Column(name = "path_location", nullable = false, length = 150)
+    @Column(name = "statut", nullable = false, length = 30)
     @Builder.Default
-    private List<String> transferPath = new ArrayList<>();
-
-    @Column(nullable = false, length = 100)
-    private String assignedWorkerId;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    @Builder.Default
-    private TaskStatus status = TaskStatus.CREATED;
-
-    @Column(nullable = false)
-    @Builder.Default
-    private Integer scanStep = 0;
-
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column
-    private LocalDateTime pickedAt;
-
-    @Column
-    private LocalDateTime completedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        if (status == TaskStatus.PICKED && pickedAt == null) {
-            pickedAt = LocalDateTime.now();
-        }
-        if (status == TaskStatus.COMPLETED) {
-            if (pickedAt == null) {
-                pickedAt = LocalDateTime.now();
-            }
-            if (completedAt == null) {
-                completedAt = LocalDateTime.now();
-            }
-        }
-    }
+    private String statut = "OPEN";
 }

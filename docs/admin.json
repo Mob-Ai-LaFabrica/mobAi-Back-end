@@ -1,0 +1,1673 @@
+{
+  "apiVersion": "v1",
+  "baseUrl": "/api/v1",
+  "role": "ADMIN",
+  "description": "Complete ADMIN endpoints for warehouse management system - hackathon MVP",
+  "controllers": [
+    {
+      "name": "AuthController",
+      "basePath": "/auth",
+      "description": "Authentication (same as other roles)",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/login",
+          "operationId": "login",
+          "security": "PUBLIC",
+          "requestBody": {
+            "username": "string",
+            "password": "string"
+          },
+          "responses": {
+            "200": {
+              "accessToken": "string (JWT)",
+              "user": {
+                "id": "UUID",
+                "username": "string",
+                "fullName": "string",
+                "role": "string (ADMIN)"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/logout",
+          "operationId": "logout",
+          "security": "BEARER_TOKEN",
+          "responses": {
+            "200": "success"
+          }
+        }
+      ]
+    },
+    {
+      "name": "UserManagementController",
+      "basePath": "/admin/users",
+      "description": "Complete user CRUD and management",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "",
+          "operationId": "getAllUsers",
+          "summary": "Get all users with current positions",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "queryParameters": [
+            {
+              "name": "role",
+              "type": "string",
+              "required": false,
+              "enum": ["EMPLOYEE", "SUPERVISOR", "ADMIN"]
+            },
+            {
+              "name": "active",
+              "type": "boolean",
+              "required": false
+            },
+            {
+              "name": "page",
+              "type": "integer",
+              "default": 0
+            },
+            {
+              "name": "size",
+              "type": "integer",
+              "default": 20
+            }
+          ],
+          "responses": {
+            "200": {
+              "content": [
+                {
+                  "id": "UUID",
+                  "username": "string",
+                  "fullName": "string",
+                  "email": "string",
+                  "role": "string",
+                  "active": "boolean",
+                  "currentPositionX": "double (nullable)",
+                  "currentPositionY": "double (nullable)",
+                  "lastPositionUpdate": "LocalDateTime (nullable)",
+                  "currentTask": "object (nullable - transaction if assigned)",
+                  "createdAt": "LocalDateTime"
+                }
+              ],
+              "totalElements": "long",
+              "totalPages": "integer"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/{userId}",
+          "operationId": "getUserById",
+          "summary": "Get user details",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "pathParameters": [
+            {
+              "name": "userId",
+              "type": "UUID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "id": "UUID",
+              "username": "string",
+              "fullName": "string",
+              "email": "string",
+              "role": "string",
+              "active": "boolean",
+              "currentPositionX": "double",
+              "currentPositionY": "double",
+              "lastPositionUpdate": "LocalDateTime",
+              "createdAt": "LocalDateTime",
+              "updatedAt": "LocalDateTime"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "",
+          "operationId": "createUser",
+          "summary": "Create new user",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "requestBody": {
+            "username": "string (required, unique)",
+            "password": "string (required, min 8 chars)",
+            "fullName": "string (required)",
+            "email": "string (optional)",
+            "role": "string (required, enum: EMPLOYEE/SUPERVISOR/ADMIN)"
+          },
+          "responses": {
+            "201": {
+              "id": "UUID",
+              "username": "string",
+              "fullName": "string",
+              "role": "string",
+              "active": "boolean",
+              "createdAt": "LocalDateTime"
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/{userId}",
+          "operationId": "updateUser",
+          "summary": "Update user",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "pathParameters": [
+            {
+              "name": "userId",
+              "type": "UUID"
+            }
+          ],
+          "requestBody": {
+            "fullName": "string (optional)",
+            "email": "string (optional)",
+            "role": "string (optional)",
+            "active": "boolean (optional)"
+          },
+          "responses": {
+            "200": "Updated user object"
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/{userId}",
+          "operationId": "deleteUser",
+          "summary": "Delete user (soft delete - set active=false)",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "pathParameters": [
+            {
+              "name": "userId",
+              "type": "UUID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "message": "User deleted successfully"
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/{userId}/reset-password",
+          "operationId": "resetUserPassword",
+          "summary": "Reset user password",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "pathParameters": [
+            {
+              "name": "userId",
+              "type": "UUID"
+            }
+          ],
+          "requestBody": {
+            "newPassword": "string (required)"
+          },
+          "responses": {
+            "200": {
+              "message": "Password reset successfully"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ProductManagementController",
+      "basePath": "/admin/products",
+      "description": "Complete product CRUD",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "",
+          "operationId": "getAllProducts",
+          "summary": "Get all products",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "queryParameters": [
+            {
+              "name": "category",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "active",
+              "type": "boolean",
+              "required": false
+            },
+            {
+              "name": "search",
+              "type": "string",
+              "required": false,
+              "description": "Search by SKU or name"
+            },
+            {
+              "name": "page",
+              "type": "integer",
+              "default": 0
+            },
+            {
+              "name": "size",
+              "type": "integer",
+              "default": 20
+            }
+          ],
+          "responses": {
+            "200": {
+              "content": "array of products",
+              "totalElements": "long"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/{productId}",
+          "operationId": "getProductById",
+          "summary": "Get product details",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "pathParameters": [
+            {
+              "name": "productId",
+              "type": "UUID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "id": "UUID",
+              "sku": "string",
+              "name": "string",
+              "unitOfMeasure": "string",
+              "category": "string",
+              "price": "double",
+              "minStock": "integer",
+              "maxStock": "integer",
+              "active": "boolean",
+              "barcodes": "array",
+              "createdAt": "LocalDateTime",
+              "updatedAt": "LocalDateTime"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "",
+          "operationId": "createProduct",
+          "summary": "Create new product",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "requestBody": {
+            "sku": "string (required, unique)",
+            "name": "string (required)",
+            "unitOfMeasure": "string (required)",
+            "category": "string (optional)",
+            "price": "double (optional)",
+            "minStock": "integer (optional)",
+            "maxStock": "integer (optional)",
+            "barcodes": [
+              {
+                "barcode": "string (required)",
+                "isPrimary": "boolean (default false)"
+              }
+            ]
+          },
+          "responses": {
+            "201": "Created product object"
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/{productId}",
+          "operationId": "updateProduct",
+          "summary": "Update product",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "pathParameters": [
+            {
+              "name": "productId",
+              "type": "UUID"
+            }
+          ],
+          "requestBody": {
+            "name": "string (optional)",
+            "category": "string (optional)",
+            "price": "double (optional)",
+            "minStock": "integer (optional)",
+            "maxStock": "integer (optional)",
+            "active": "boolean (optional)"
+          },
+          "responses": {
+            "200": "Updated product object"
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/{productId}",
+          "operationId": "deleteProduct",
+          "summary": "Delete product (soft delete)",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "pathParameters": [
+            {
+              "name": "productId",
+              "type": "UUID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "message": "Product deleted successfully"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/{productId}/barcodes",
+          "operationId": "addBarcode",
+          "summary": "Add barcode to product",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "pathParameters": [
+            {
+              "name": "productId",
+              "type": "UUID"
+            }
+          ],
+          "requestBody": {
+            "barcode": "string (required)",
+            "isPrimary": "boolean (default false)"
+          },
+          "responses": {
+            "201": "Created barcode object"
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/{productId}/barcodes/{barcodeId}",
+          "operationId": "removeBarcode",
+          "summary": "Remove barcode from product",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "pathParameters": [
+            {
+              "name": "productId",
+              "type": "UUID"
+            },
+            {
+              "name": "barcodeId",
+              "type": "UUID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "message": "Barcode removed successfully"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "LocationManagementController",
+      "basePath": "/admin/locations",
+      "description": "Complete location CRUD with coordinates",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "",
+          "operationId": "getAllLocations",
+          "summary": "Get all locations",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "queryParameters": [
+            {
+              "name": "warehouseId",
+              "type": "UUID",
+              "required": false
+            },
+            {
+              "name": "zone",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "type",
+              "type": "string",
+              "required": false,
+              "enum": ["RECEIVING", "STORAGE", "PICKING", "EXPEDITION"]
+            },
+            {
+              "name": "active",
+              "type": "boolean",
+              "required": false
+            },
+            {
+              "name": "page",
+              "type": "integer",
+              "default": 0
+            },
+            {
+              "name": "size",
+              "type": "integer",
+              "default": 50
+            }
+          ],
+          "responses": {
+            "200": {
+              "content": "array of locations with coordinates"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/{locationId}",
+          "operationId": "getLocationById",
+          "summary": "Get location details",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "pathParameters": [
+            {
+              "name": "locationId",
+              "type": "UUID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "id": "UUID",
+              "code": "string",
+              "warehouseCode": "string",
+              "zone": "string",
+              "type": "string",
+              "positionX": "double",
+              "positionY": "double",
+              "positionZ": "double",
+              "distanceFromReceipt": "double",
+              "distanceFromExpedition": "double",
+              "active": "boolean",
+              "currentStock": "array (products stored here)"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "",
+          "operationId": "createLocation",
+          "summary": "Create new location",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "requestBody": {
+            "code": "string (required, unique)",
+            "warehouseId": "UUID (required)",
+            "zone": "string (optional)",
+            "type": "string (required, enum)",
+            "positionX": "double (optional)",
+            "positionY": "double (optional)",
+            "positionZ": "double (optional, default 0)"
+          },
+          "responses": {
+            "201": "Created location object"
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/{locationId}",
+          "operationId": "updateLocation",
+          "summary": "Update location",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "pathParameters": [
+            {
+              "name": "locationId",
+              "type": "UUID"
+            }
+          ],
+          "requestBody": {
+            "zone": "string (optional)",
+            "type": "string (optional)",
+            "positionX": "double (optional)",
+            "positionY": "double (optional)",
+            "active": "boolean (optional)"
+          },
+          "responses": {
+            "200": "Updated location object"
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/{locationId}",
+          "operationId": "deleteLocation",
+          "summary": "Delete location (soft delete)",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "pathParameters": [
+            {
+              "name": "locationId",
+              "type": "UUID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "message": "Location deleted successfully"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/bulk-import",
+          "operationId": "bulkImportLocations",
+          "summary": "Bulk import locations from CSV",
+          "description": "Import warehouse locations with coordinates from CSV file",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "requestBody": {
+            "type": "multipart/form-data",
+            "file": "CSV file with columns: code, zone, type, positionX, positionY, positionZ, etc."
+          },
+          "responses": {
+            "200": {
+              "imported": "integer",
+              "skipped": "integer",
+              "errors": "array"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "WarehouseManagementController",
+      "basePath": "/admin/warehouses",
+      "description": "Warehouse CRUD",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "",
+          "operationId": "getAllWarehouses",
+          "summary": "Get all warehouses",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "responses": {
+            "200": {
+              "type": "array",
+              "items": {
+                "id": "UUID",
+                "code": "string",
+                "name": "string",
+                "city": "string",
+                "active": "boolean",
+                "locationCount": "integer"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/{warehouseId}",
+          "operationId": "getWarehouseById",
+          "summary": "Get warehouse details",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "pathParameters": [
+            {
+              "name": "warehouseId",
+              "type": "UUID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "id": "UUID",
+              "code": "string",
+              "name": "string",
+              "city": "string",
+              "active": "boolean",
+              "locations": "array",
+              "createdAt": "LocalDateTime"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "",
+          "operationId": "createWarehouse",
+          "summary": "Create new warehouse",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "requestBody": {
+            "code": "string (required, unique)",
+            "name": "string (required)",
+            "city": "string (optional)"
+          },
+          "responses": {
+            "201": "Created warehouse object"
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/{warehouseId}",
+          "operationId": "updateWarehouse",
+          "summary": "Update warehouse",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "pathParameters": [
+            {
+              "name": "warehouseId",
+              "type": "UUID"
+            }
+          ],
+          "requestBody": {
+            "name": "string (optional)",
+            "city": "string (optional)",
+            "active": "boolean (optional)"
+          },
+          "responses": {
+            "200": "Updated warehouse object"
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/{warehouseId}",
+          "operationId": "deleteWarehouse",
+          "summary": "Delete warehouse",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "pathParameters": [
+            {
+              "name": "warehouseId",
+              "type": "UUID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "message": "Warehouse deleted successfully"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ChariotManagementController",
+      "basePath": "/admin/chariots",
+      "description": "Chariot CRUD and management",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "",
+          "operationId": "getAllChariots",
+          "summary": "Get all chariots",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "queryParameters": [
+            {
+              "name": "status",
+              "type": "string",
+              "required": false,
+              "enum": ["AVAILABLE", "IN_USE", "MAINTENANCE", "RETIRED"]
+            }
+          ],
+          "responses": {
+            "200": {
+              "type": "array",
+              "items": {
+                "id": "UUID",
+                "code": "string",
+                "status": "string",
+                "currentLocation": "object (nullable)",
+                "lastUsedBy": "object (nullable)",
+                "lastUsedAt": "LocalDateTime (nullable)",
+                "active": "boolean"
+              }
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "",
+          "operationId": "createChariot",
+          "summary": "Create new chariot",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "requestBody": {
+            "code": "string (required, unique)"
+          },
+          "responses": {
+            "201": "Created chariot object"
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/{chariotId}",
+          "operationId": "updateChariot",
+          "summary": "Update chariot status",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "pathParameters": [
+            {
+              "name": "chariotId",
+              "type": "UUID"
+            }
+          ],
+          "requestBody": {
+            "status": "string (enum)",
+            "active": "boolean (optional)"
+          },
+          "responses": {
+            "200": "Updated chariot object"
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/{chariotId}",
+          "operationId": "deleteChariot",
+          "summary": "Delete chariot",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "pathParameters": [
+            {
+              "name": "chariotId",
+              "type": "UUID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "message": "Chariot deleted successfully"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "InventoryController",
+      "basePath": "/admin/inventory",
+      "description": "Complete inventory overview and management",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/summary",
+          "operationId": "getInventorySummary",
+          "summary": "Get complete inventory summary",
+          "description": "All products with SKU, stock levels, locations, alerts",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "queryParameters": [
+            {
+              "name": "category",
+              "type": "string",
+              "required": false
+            },
+            {
+              "name": "lowStockOnly",
+              "type": "boolean",
+              "required": false,
+              "description": "Show only products below minStock threshold"
+            },
+            {
+              "name": "page",
+              "type": "integer",
+              "default": 0
+            },
+            {
+              "name": "size",
+              "type": "integer",
+              "default": 50
+            }
+          ],
+          "responses": {
+            "200": {
+              "content": [
+                {
+                  "productId": "UUID",
+                  "sku": "string",
+                  "name": "string",
+                  "category": "string",
+                  "price": "double",
+                  "unitOfMeasure": "string",
+                  "totalStock": "integer",
+                  "minStock": "integer",
+                  "maxStock": "integer",
+                  "stockAlert": "boolean (true if totalStock < minStock)",
+                  "stockLocations": [
+                    {
+                      "locationCode": "string",
+                      "quantity": "integer"
+                    }
+                  ],
+                  "lastUpdated": "LocalDateTime"
+                }
+              ],
+              "totalProducts": "integer",
+              "lowStockCount": "integer"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/alerts",
+          "operationId": "getStockAlerts",
+          "summary": "Get all stock alerts (products below minStock)",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "responses": {
+            "200": {
+              "type": "array",
+              "items": {
+                "productId": "UUID",
+                "sku": "string",
+                "name": "string",
+                "currentStock": "integer",
+                "minStock": "integer",
+                "deficit": "integer"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/product/{productId}",
+          "operationId": "getProductInventory",
+          "summary": "Get detailed inventory for specific product",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "pathParameters": [
+            {
+              "name": "productId",
+              "type": "UUID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "product": "object",
+              "totalStock": "integer",
+              "stockByLocation": "array",
+              "stockMovements": "array (recent from StockLedger)",
+              "lastUpdated": "LocalDateTime"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/location/{locationId}",
+          "operationId": "getLocationInventory",
+          "summary": "Get all products in specific location",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "pathParameters": [
+            {
+              "name": "locationId",
+              "type": "UUID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "location": "object",
+              "products": [
+                {
+                  "productId": "UUID",
+                  "sku": "string",
+                  "name": "string",
+                  "quantity": "integer",
+                  "lastUpdated": "LocalDateTime"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "/adjustment",
+          "operationId": "createStockAdjustment",
+          "summary": "Manual stock adjustment",
+          "description": "Admin can manually adjust stock for corrections",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "requestBody": {
+            "productId": "UUID (required)",
+            "locationId": "UUID (required)",
+            "adjustmentQuantity": "integer (required, can be negative)",
+            "reason": "string (required)",
+            "notes": "string (optional)"
+          },
+          "responses": {
+            "201": {
+              "transactionId": "UUID",
+              "newBalance": "integer",
+              "message": "Stock adjusted successfully"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "TaskManagementController",
+      "basePath": "/admin/tasks",
+      "description": "View and manage all tasks (same as supervisor but with full access)",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "",
+          "operationId": "getAllTasks",
+          "summary": "Get all tasks in system",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "queryParameters": [
+            {
+              "name": "type",
+              "type": "string",
+              "required": false,
+              "enum": ["RECEIPT", "TRANSFER", "PICKING", "DELIVERY"]
+            },
+            {
+              "name": "status",
+              "type": "string",
+              "required": false,
+              "enum": ["PENDING", "IN_PROGRESS", "COMPLETED", "CANCELLED", "FAILED"]
+            },
+            {
+              "name": "assignedToId",
+              "type": "UUID",
+              "required": false
+            },
+            {
+              "name": "createdById",
+              "type": "UUID",
+              "required": false
+            },
+            {
+              "name": "startDate",
+              "type": "LocalDate",
+              "required": false
+            },
+            {
+              "name": "endDate",
+              "type": "LocalDate",
+              "required": false
+            },
+            {
+              "name": "page",
+              "type": "integer",
+              "default": 0
+            },
+            {
+              "name": "size",
+              "type": "integer",
+              "default": 20
+            }
+          ],
+          "responses": {
+            "200": {
+              "content": "array of transactions/tasks",
+              "totalElements": "long"
+            }
+          }
+        },
+        {
+          "method": "POST",
+          "path": "",
+          "operationId": "createTask",
+          "summary": "Create new task/transaction",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "requestBody": {
+            "type": "string (required, enum: RECEIPT/TRANSFER/PICKING/DELIVERY)",
+            "priority": "string (optional, default MEDIUM)",
+            "assignedToId": "UUID (optional)",
+            "chariotId": "UUID (optional)",
+            "notes": "string (optional)",
+            "lines": [
+              {
+                "productId": "UUID (required)",
+                "quantity": "integer (required)",
+                "sourceLocationId": "UUID (optional)",
+                "destinationLocationId": "UUID (optional)"
+              }
+            ]
+          },
+          "responses": {
+            "201": {
+              "id": "UUID",
+              "reference": "string (auto-generated)",
+              "type": "string",
+              "status": "string (PENDING)",
+              "createdAt": "LocalDateTime"
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/{taskId}",
+          "operationId": "updateTask",
+          "summary": "Update task (reassign, change priority, override AI)",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "pathParameters": [
+            {
+              "name": "taskId",
+              "type": "UUID"
+            }
+          ],
+          "requestBody": {
+            "assignedToId": "UUID (optional)",
+            "priority": "string (optional)",
+            "status": "string (optional)",
+            "notes": "string (optional)"
+          },
+          "responses": {
+            "200": "Updated task object"
+          }
+        },
+        {
+          "method": "DELETE",
+          "path": "/{taskId}",
+          "operationId": "deleteTask",
+          "summary": "Cancel/delete task",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "pathParameters": [
+            {
+              "name": "taskId",
+              "type": "UUID"
+            }
+          ],
+          "requestBody": {
+            "reason": "string (required)"
+          },
+          "responses": {
+            "200": {
+              "message": "Task cancelled successfully"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AiDecisionController",
+      "basePath": "/admin/ai-decisions",
+      "description": "View and override AI decisions",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "",
+          "operationId": "getAllAiDecisions",
+          "summary": "Get all AI decisions",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "queryParameters": [
+            {
+              "name": "decisionType",
+              "type": "string",
+              "required": false,
+              "enum": ["STORAGE_ASSIGNMENT", "PICKING_ROUTE", "PREPARATION_FORECAST"]
+            },
+            {
+              "name": "wasOverridden",
+              "type": "boolean",
+              "required": false
+            },
+            {
+              "name": "startDate",
+              "type": "LocalDate",
+              "required": false
+            },
+            {
+              "name": "page",
+              "type": "integer",
+              "default": 0
+            },
+            {
+              "name": "size",
+              "type": "integer",
+              "default": 20
+            }
+          ],
+          "responses": {
+            "200": {
+              "content": "array of AI decisions"
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/{decisionId}/override",
+          "operationId": "overrideAiDecision",
+          "summary": "Override AI decision",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "pathParameters": [
+            {
+              "name": "decisionId",
+              "type": "UUID"
+            }
+          ],
+          "requestBody": {
+            "finalDecision": "object (JSON - new decision)",
+            "overrideReason": "string (required)"
+          },
+          "responses": {
+            "200": {
+              "decisionId": "UUID",
+              "wasOverridden": "boolean (true)",
+              "overriddenBy": "object (admin user)",
+              "overriddenAt": "LocalDateTime"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "DiscrepancyManagementController",
+      "basePath": "/admin/discrepancies",
+      "description": "View and resolve discrepancies",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "",
+          "operationId": "getAllDiscrepancies",
+          "summary": "Get all discrepancies",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "queryParameters": [
+            {
+              "name": "resolved",
+              "type": "boolean",
+              "required": false
+            },
+            {
+              "name": "issueType",
+              "type": "string",
+              "required": false,
+              "enum": ["MISSING", "DAMAGED", "EXCESS", "NOT_FOUND", "INSUFFICIENT_STOCK"]
+            },
+            {
+              "name": "page",
+              "type": "integer",
+              "default": 0
+            }
+          ],
+          "responses": {
+            "200": {
+              "content": "array of discrepancies"
+            }
+          }
+        },
+        {
+          "method": "PUT",
+          "path": "/{discrepancyId}/resolve",
+          "operationId": "resolveDiscrepancy",
+          "summary": "Resolve discrepancy",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "pathParameters": [
+            {
+              "name": "discrepancyId",
+              "type": "UUID"
+            }
+          ],
+          "requestBody": {
+            "resolution": "string (required)",
+            "notes": "string (optional)"
+          },
+          "responses": {
+            "200": {
+              "discrepancyId": "UUID",
+              "resolvedBy": "object (admin user)",
+              "resolvedAt": "LocalDateTime",
+              "resolution": "string"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AuditLogController",
+      "basePath": "/admin/audit-logs",
+      "description": "View complete audit trail of all actions",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "",
+          "operationId": "getAuditLogs",
+          "summary": "Get audit logs with filters",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "queryParameters": [
+            {
+              "name": "userId",
+              "type": "UUID",
+              "required": false,
+              "description": "Filter by user who performed action"
+            },
+            {
+              "name": "action",
+              "type": "string",
+              "required": false,
+              "description": "Filter by action type (LOGIN, CREATE_PRODUCT, etc.)"
+            },
+            {
+              "name": "entityType",
+              "type": "string",
+              "required": false,
+              "description": "Filter by entity type (Product, User, Transaction, etc.)"
+            },
+            {
+              "name": "entityId",
+              "type": "UUID",
+              "required": false,
+              "description": "Filter by specific entity"
+            },
+            {
+              "name": "startDate",
+              "type": "LocalDateTime",
+              "required": false
+            },
+            {
+              "name": "endDate",
+              "type": "LocalDateTime",
+              "required": false
+            },
+            {
+              "name": "page",
+              "type": "integer",
+              "default": 0
+            },
+            {
+              "name": "size",
+              "type": "integer",
+              "default": 50
+            }
+          ],
+          "responses": {
+            "200": {
+              "content": [
+                {
+                  "id": "UUID",
+                  "user": {
+                    "id": "UUID",
+                    "username": "string",
+                    "fullName": "string"
+                  },
+                  "action": "string",
+                  "entityType": "string",
+                  "entityId": "UUID",
+                  "oldValue": "object (JSON)",
+                  "newValue": "object (JSON)",
+                  "ipAddress": "string",
+                  "createdAt": "LocalDateTime"
+                }
+              ],
+              "totalElements": "long"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/user/{userId}",
+          "operationId": "getUserAuditHistory",
+          "summary": "Get complete audit history for specific user",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "pathParameters": [
+            {
+              "name": "userId",
+              "type": "UUID"
+            }
+          ],
+          "queryParameters": [
+            {
+              "name": "startDate",
+              "type": "LocalDateTime",
+              "required": false
+            },
+            {
+              "name": "endDate",
+              "type": "LocalDateTime",
+              "required": false
+            }
+          ],
+          "responses": {
+            "200": {
+              "user": "object",
+              "actions": "array (chronological audit logs)"
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/entity/{entityType}/{entityId}",
+          "operationId": "getEntityAuditHistory",
+          "summary": "Get complete audit history for specific entity",
+          "description": "Track all changes made to a product, location, transaction, etc.",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "pathParameters": [
+            {
+              "name": "entityType",
+              "type": "string",
+              "description": "Product, Location, Transaction, User, etc."
+            },
+            {
+              "name": "entityId",
+              "type": "UUID"
+            }
+          ],
+          "responses": {
+            "200": {
+              "entityType": "string",
+              "entityId": "UUID",
+              "currentState": "object",
+              "auditTrail": "array (all changes chronologically)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "DashboardController",
+      "basePath": "/admin/dashboard",
+      "description": "Admin dashboard with KPIs and metrics",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "",
+          "operationId": "getAdminDashboard",
+          "summary": "Get complete admin dashboard",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "responses": {
+            "200": {
+              "overview": {
+                "totalProducts": "integer",
+                "totalLocations": "integer",
+                "totalUsers": "integer",
+                "activeEmployees": "integer",
+                "activeChariots": "integer"
+              },
+              "operations": {
+                "tasksInProgress": "integer",
+                "tasksPending": "integer",
+                "tasksCompletedToday": "integer",
+                "unresolvedDiscrepancies": "integer"
+              },
+              "inventory": {
+                "totalStockValue": "double",
+                "lowStockAlerts": "integer",
+                "outOfStockCount": "integer"
+              },
+              "aiMetrics": {
+                "totalAiDecisions": "integer",
+                "overrideRate": "double (percentage)",
+                "aiAccuracy": "double (percentage, optional)"
+              },
+              "recentActivity": "array (last 10 actions from audit log)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ReportsController",
+      "basePath": "/admin/reports",
+      "description": "Generate various reports",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/stock-movements",
+          "operationId": "getStockMovementReport",
+          "summary": "Stock movement report",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "queryParameters": [
+            {
+              "name": "startDate",
+              "type": "LocalDate",
+              "required": true
+            },
+            {
+              "name": "endDate",
+              "type": "LocalDate",
+              "required": true
+            },
+            {
+              "name": "productId",
+              "type": "UUID",
+              "required": false
+            }
+          ],
+          "responses": {
+            "200": {
+              "period": "string",
+              "movements": "array (from StockLedger)",
+              "summary": {
+                "totalIn": "integer",
+                "totalOut": "integer",
+                "netChange": "integer"
+              }
+            }
+          }
+        },
+        {
+          "method": "GET",
+          "path": "/user-productivity",
+          "operationId": "getUserProductivityReport",
+          "summary": "Employee productivity report",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "queryParameters": [
+            {
+              "name": "startDate",
+              "type": "LocalDate",
+              "required": true
+            },
+            {
+              "name": "endDate",
+              "type": "LocalDate",
+              "required": true
+            },
+            {
+              "name": "userId",
+              "type": "UUID",
+              "required": false
+            }
+          ],
+          "responses": {
+            "200": {
+              "period": "string",
+              "users": [
+                {
+                  "userId": "UUID",
+                  "fullName": "string",
+                  "tasksCompleted": "integer",
+                  "averageCompletionTime": "duration",
+                  "discrepanciesReported": "integer"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "MonitoringController",
+      "basePath": "/admin/monitoring",
+      "description": "Real-time warehouse monitoring",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/warehouse-status",
+          "operationId": "getWarehouseStatus",
+          "summary": "Complete warehouse real-time status",
+          "security": "BEARER_TOKEN (ADMIN)",
+          "responses": {
+            "200": {
+              "employees": [
+                {
+                  "userId": "UUID",
+                  "fullName": "string",
+                  "currentTask": "object (nullable)",
+                  "currentPositionX": "double",
+                  "currentPositionY": "double",
+                  "lastPositionUpdate": "LocalDateTime",
+                  "status": "string (IDLE, WORKING)"
+                }
+              ],
+              "chariots": [
+                {
+                  "chariotId": "UUID",
+                  "code": "string",
+                  "status": "string",
+                  "currentLocation": "object (nullable)",
+                  "assignedTo": "object (nullable)"
+                }
+              ],
+              "activeOperations": [
+                {
+                  "transactionId": "UUID",
+                  "type": "string",
+                  "assignedTo": "object",
+                  "progress": "string (e.g., '3/5 lines completed')"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "totalEndpoints": 68,
+  "controllerBreakdown": {
+    "AuthController": 2,
+    "UserManagementController": 6,
+    "ProductManagementController": 7,
+    "LocationManagementController": 6,
+    "WarehouseManagementController": 5,
+    "ChariotManagementController": 4,
+    "InventoryController": 5,
+    "TaskManagementController": 4,
+    "AiDecisionController": 2,
+    "DiscrepancyManagementController": 2,
+    "AuditLogController": 3,
+    "DashboardController": 1,
+    "ReportsController": 2,
+    "MonitoringController": 1
+  },
+  "requestDTOs": [
+    {
+      "name": "CreateUserRequest",
+      "fields": {
+        "username": "string (required)",
+        "password": "string (required)",
+        "fullName": "string (required)",
+        "email": "string (optional)",
+        "role": "string (required, enum)"
+      }
+    },
+    {
+      "name": "UpdateUserRequest",
+      "fields": {
+        "fullName": "string (optional)",
+        "email": "string (optional)",
+        "role": "string (optional)",
+        "active": "boolean (optional)"
+      }
+    },
+    {
+      "name": "CreateProductRequest",
+      "fields": {
+        "sku": "string (required)",
+        "name": "string (required)",
+        "unitOfMeasure": "string (required)",
+        "category": "string (optional)",
+        "price": "double (optional)",
+        "minStock": "integer (optional)",
+        "maxStock": "integer (optional)",
+        "barcodes": "array (optional)"
+      }
+    },
+    {
+      "name": "UpdateProductRequest",
+      "fields": {
+        "name": "string (optional)",
+        "category": "string (optional)",
+        "price": "double (optional)",
+        "minStock": "integer (optional)",
+        "maxStock": "integer (optional)",
+        "active": "boolean (optional)"
+      }
+    },
+    {
+      "name": "CreateLocationRequest",
+      "fields": {
+        "code": "string (required)",
+        "warehouseId": "UUID (required)",
+        "zone": "string (optional)",
+        "type": "string (required)",
+        "positionX": "double (optional)",
+        "positionY": "double (optional)",
+        "positionZ": "double (optional)"
+      }
+    },
+    {
+      "name": "UpdateLocationRequest",
+      "fields": {
+        "zone": "string (optional)",
+        "type": "string (optional)",
+        "positionX": "double (optional)",
+        "positionY": "double (optional)",
+        "active": "boolean (optional)"
+      }
+    },
+    {
+      "name": "CreateWarehouseRequest",
+      "fields": {
+        "code": "string (required)",
+        "name": "string (required)",
+        "city": "string (optional)"
+      }
+    },
+    {
+      "name": "CreateTaskRequest",
+      "fields": {
+        "type": "string (required, enum)",
+        "priority": "string (optional)",
+        "assignedToId": "UUID (optional)",
+        "chariotId": "UUID (optional)",
+        "notes": "string (optional)",
+        "lines": "array (required)"
+      }
+    },
+    {
+      "name": "StockAdjustmentRequest",
+      "fields": {
+        "productId": "UUID (required)",
+        "locationId": "UUID (required)",
+        "adjustmentQuantity": "integer (required)",
+        "reason": "string (required)",
+        "notes": "string (optional)"
+      }
+    },
+    {
+      "name": "OverrideAiDecisionRequest",
+      "fields": {
+        "finalDecision": "object (JSON, required)",
+        "overrideReason": "string (required)"
+      }
+    },
+    {
+      "name": "ResolveDiscrepancyRequest",
+      "fields": {
+        "resolution": "string (required)",
+        "notes": "string (optional)"
+      }
+    }
+  ],
+  "keyFeatures": {
+    "auditLogging": "Every action (login, create, update, delete, override) is logged in AuditLog table with old/new values",
+    "inventoryManagement": "Complete inventory view with SKU, stock, locations, category, price, min/max stock alerts",
+    "positionTracking": "User positions updated when scanning (x,y from location CSV), visible in monitoring dashboard",
+    "warehouseVisualization": "Locations have x,y,z coordinates from CSV for cartography/mapping",
+    "fullCRUD": "Admin has complete CRUD on Users, Products, Locations, Warehouses, Chariots",
+    "taskManagement": "Can create, assign, reassign, cancel any task",
+    "aiOversight": "View all AI decisions, override with justification",
+    "discrepancyResolution": "Resolve employee-reported issues",
+    "reporting": "Stock movement reports, user productivity reports",
+    "monitoring": "Real-time view of employee positions, chariot status, active operations"
+  },
+  "positionTrackingWorkflow": {
+    "step1": "Locations imported from CSV with x,y,z coordinates",
+    "step2": "When employee scans location QR code during operation, they send their coordinates",
+    "step3": "Backend updates User.currentPositionX, User.currentPositionY, User.lastPositionUpdate",
+    "step4": "Admin calls GET /admin/users or GET /admin/monitoring/warehouse-status to see all employee positions",
+    "step5": "Frontend can plot employees on warehouse map using coordinates"
+  },
+  "auditLogExamples": [
+    {
+      "action": "LOGIN",
+      "entityType": null,
+      "entityId": null,
+      "oldValue": null,
+      "newValue": null
+    },
+    {
+      "action": "CREATE_PRODUCT",
+      "entityType": "Product",
+      "entityId": "product-uuid",
+      "oldValue": null,
+      "newValue": "{sku: 'NEW-001', name: 'New Product', ...}"
+    },
+    {
+      "action": "UPDATE_PRODUCT",
+      "entityType": "Product",
+      "entityId": "product-uuid",
+      "oldValue": "{price: 10.00}",
+      "newValue": "{price: 15.00}"
+    },
+    {
+      "action": "DELETE_LOCATION",
+      "entityType": "Location",
+      "entityId": "location-uuid",
+      "oldValue": "{active: true}",
+      "newValue": "{active: false}"
+    },
+    {
+      "action": "OVERRIDE_AI",
+      "entityType": "AiDecisionLog",
+      "entityId": "decision-uuid",
+      "oldValue": "{aiSuggestion: {...}}",
+      "newValue": "{finalDecision: {...}, overrideReason: '...'}"
+    }
+  ]
+}

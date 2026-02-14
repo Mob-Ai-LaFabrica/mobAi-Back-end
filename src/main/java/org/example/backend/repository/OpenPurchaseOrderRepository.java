@@ -6,10 +6,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.UUID;
+import java.util.List;
 
 @Repository
-public interface OpenPurchaseOrderRepository extends JpaRepository<OpenPurchaseOrder, UUID> {
+public interface OpenPurchaseOrderRepository extends JpaRepository<OpenPurchaseOrder, String> {
 
-    Page<OpenPurchaseOrder> findByAssignedWorkerId(String assignedWorkerId, Pageable pageable);
+    List<OpenPurchaseOrder> findByStatut(String statut);
+
+    Page<OpenPurchaseOrder> findByStatut(String statut, Pageable pageable);
+
+    List<OpenPurchaseOrder> findByProduct_Id(java.util.UUID productId);
 }

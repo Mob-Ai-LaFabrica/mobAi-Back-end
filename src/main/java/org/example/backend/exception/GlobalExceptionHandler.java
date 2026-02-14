@@ -18,76 +18,86 @@ import java.util.Map;
 @Slf4j
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(DuplicateResourceException.class)
-    public ResponseEntity<ApiResponse<Void>> handleDuplicateResource(
-            DuplicateResourceException ex, WebRequest request) {
+        @ExceptionHandler(DuplicateResourceException.class)
+        public ResponseEntity<ApiResponse<Void>> handleDuplicateResource(
+                        DuplicateResourceException ex, WebRequest request) {
 
-        log.error("Duplicate resource: {}", ex.getMessage());
+                log.error("Duplicate resource: {}", ex.getMessage());
 
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(ApiResponse.error(ex.getMessage(), "DUPLICATE_RESOURCE"));
-    }
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                                .body(ApiResponse.error(ex.getMessage(), "DUPLICATE_RESOURCE"));
+        }
 
-    @ExceptionHandler(InvalidCredentialsException.class)
-    public ResponseEntity<ApiResponse<Void>> handleInvalidCredentials(
-            InvalidCredentialsException ex, WebRequest request) {
+        @ExceptionHandler(InvalidCredentialsException.class)
+        public ResponseEntity<ApiResponse<Void>> handleInvalidCredentials(
+                        InvalidCredentialsException ex, WebRequest request) {
 
-        log.error("Invalid credentials: {}", ex.getMessage());
+                log.error("Invalid credentials: {}", ex.getMessage());
 
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error(ex.getMessage(), "INVALID_CREDENTIALS"));
-    }
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                .body(ApiResponse.error(ex.getMessage(), "INVALID_CREDENTIALS"));
+        }
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ApiResponse<Void>> handleResourceNotFound(
-            ResourceNotFoundException ex, WebRequest request) {
+        @ExceptionHandler(ResourceNotFoundException.class)
+        public ResponseEntity<ApiResponse<Void>> handleResourceNotFound(
+                        ResourceNotFoundException ex, WebRequest request) {
 
-        log.error("Resource not found: {}", ex.getMessage());
+                log.error("Resource not found: {}", ex.getMessage());
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.error(ex.getMessage(), "RESOURCE_NOT_FOUND"));
-    }
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                                .body(ApiResponse.error(ex.getMessage(), "RESOURCE_NOT_FOUND"));
+        }
 
-    @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ApiResponse<Void>> handleBadCredentials(
-            BadCredentialsException ex, WebRequest request) {
+        @ExceptionHandler(InvalidOperationException.class)
+        public ResponseEntity<ApiResponse<Void>> handleInvalidOperation(
+                        InvalidOperationException ex, WebRequest request) {
 
-        log.error("Bad credentials: {}", ex.getMessage());
+                log.error("Invalid operation: {}", ex.getMessage());
 
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error("Invalid username or password", "BAD_CREDENTIALS"));
-    }
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                .body(ApiResponse.error(ex.getMessage(), "INVALID_OPERATION"));
+        }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationExceptions(
-            MethodArgumentNotValidException ex) {
+        @ExceptionHandler(BadCredentialsException.class)
+        public ResponseEntity<ApiResponse<Void>> handleBadCredentials(
+                        BadCredentialsException ex, WebRequest request) {
 
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
-        });
+                log.error("Bad credentials: {}", ex.getMessage());
 
-        log.error("Validation errors: {}", errors);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                .body(ApiResponse.error("Invalid username or password", "BAD_CREDENTIALS"));
+        }
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.<Map<String, String>>builder()
-                        .success(false)
-                        .message("Validation failed")
-                        .data(errors)
-                        .errorCode("VALIDATION_ERROR")
-                        .timestamp(java.time.LocalDateTime.now())
-                        .build());
-    }
+        @ExceptionHandler(MethodArgumentNotValidException.class)
+        public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationExceptions(
+                        MethodArgumentNotValidException ex) {
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<Void>> handleGenericException(
-            Exception ex, WebRequest request) {
+                Map<String, String> errors = new HashMap<>();
+                ex.getBindingResult().getAllErrors().forEach((error) -> {
+                        String fieldName = ((FieldError) error).getField();
+                        String errorMessage = error.getDefaultMessage();
+                        errors.put(fieldName, errorMessage);
+                });
 
-        log.error("Unexpected error: {}", ex.getMessage(), ex);
+                log.error("Validation errors: {}", errors);
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("An unexpected error occurred", "INTERNAL_ERROR"));
-    }
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                .body(ApiResponse.<Map<String, String>>builder()
+                                                .success(false)
+                                                .message("Validation failed")
+                                                .data(errors)
+                                                .errorCode("VALIDATION_ERROR")
+                                                .timestamp(java.time.LocalDateTime.now())
+                                                .build());
+        }
+
+        @ExceptionHandler(Exception.class)
+        public ResponseEntity<ApiResponse<Void>> handleGenericException(
+                        Exception ex, WebRequest request) {
+
+                log.error("Unexpected error: {}", ex.getMessage(), ex);
+
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                .body(ApiResponse.error("An unexpected error occurred", "INTERNAL_ERROR"));
+        }
 }

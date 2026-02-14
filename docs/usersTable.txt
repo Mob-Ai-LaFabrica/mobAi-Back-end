@@ -1,0 +1,5 @@
+id_utilisateur	nom_complet	role	email	actif
+texte	texte	texte	texte	booleen
+O	O	O	N	O
+
+example row: U001	A. Operator	OPERATOR	operator@example.com	TRUE
