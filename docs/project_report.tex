@@ -1,0 +1,263 @@
+\documentclass[11pt,a4paper]{article}
+
+% ── Packages ──────────────────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage[margin=2cm]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{multicol}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{float}
+\usepackage{parskip}
+
+% ── Colors ────────────────────────────────────────────────────────────────────
+\definecolor{primary}{HTML}{1A73E8}
+\definecolor{darktext}{HTML}{202124}
+\definecolor{lightgray}{HTML}{F5F5F5}
+
+% ── Hyperlinks ────────────────────────────────────────────────────────────────
+\hypersetup{
+    colorlinks=true,
+    linkcolor=primary,
+    urlcolor=primary,
+    citecolor=primary
+}
+
+% ── Section Formatting ───────────────────────────────────────────────────────
+\titleformat{\section}{\large\bfseries\color{primary}}{\thesection}{0.5em}{}[\vspace{-0.3em}\color{primary}\hrule\vspace{0.3em}]
+\titleformat{\subsection}{\normalsize\bfseries\color{darktext}}{\thesubsection}{0.5em}{}
+\titlespacing*{\section}{0pt}{1.2em}{0.4em}
+\titlespacing*{\subsection}{0pt}{0.8em}{0.2em}
+
+% ── Header / Footer ─────────────────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{gray}MobAI — Warehouse Management System}
+\fancyhead[R]{\small\color{gray}Technical Report}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ══════════════════════════════════════════════════════════════════════════════
+\begin{document}
+
+% ── TITLE ────────────────────────────────────────────────────────────────────
+\begin{center}
+    {\LARGE\bfseries\color{primary} MobAI — Intelligent Warehouse Management System}\\[0.6em]
+    {\large Backend Technical Report}\\[0.8em]
+    {\normalsize\color{gray} Spring Boot · PostgreSQL · AI/ML Integration · REST API}\\[0.3em]
+    {\small\color{gray} February 2026}
+\end{center}
+
+\vspace{0.5em}
+
+% ── 1. INTRODUCTION ─────────────────────────────────────────────────────────
+\section{Introduction}
+
+MobAI is an intelligent Warehouse Management System (WMS) designed to optimize warehouse operations through the integration of artificial intelligence. The system manages the complete lifecycle of warehouse activities—goods receipt, internal transfers, order picking, and delivery—while leveraging machine learning models for demand forecasting, smart storage assignment, and route optimization.
+
+The backend is implemented as a RESTful API using \textbf{Spring Boot 3.2.2} with \textbf{Java 17}, backed by \textbf{PostgreSQL 15}, and communicates asynchronously with an external \textbf{FastAPI} AI/ML service for intelligent decision support.
+
+% ── 2. TECH STACK ────────────────────────────────────────────────────────────
+\section{Technology Stack}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\textbf{Component} & \textbf{Technology} \\
+\midrule
+Framework       & Spring Boot 3.2.2, Spring Cloud OpenFeign \\
+Language        & Java 17 \\
+Database        & PostgreSQL 15 (production), MySQL (development), H2 (testing) \\
+ORM             & Spring Data JPA / Hibernate \\
+Security        & Spring Security + JWT (jjwt 0.12.3) + BCrypt \\
+AI Integration  & Spring WebFlux WebClient $\rightarrow$ FastAPI (Python) \\
+API Docs        & Springdoc OpenAPI 2.3.0 / Swagger UI \\
+Caching         & Caffeine + Spring Cache \\
+Auditing        & Spring AOP / AspectJ \\
+Containerization& Docker (multi-stage build), Docker Compose \\
+Build           & Maven, Lombok, ModelMapper 3.2.0 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ── 3. ARCHITECTURE ─────────────────────────────────────────────────────────
+\section{System Architecture}
+
+The system follows a \textbf{layered architecture} organized into Controllers, Services, and Repositories. All API responses are wrapped in a generic \texttt{ApiResponse<T>} envelope containing success status, message, data, and timestamp.
+
+\subsection{Architectural Patterns}
+
+\begin{itemize}[nosep,leftmargin=1.2em]
+    \item \textbf{DTO Pattern} — 39 request DTOs and 8 response DTOs decouple API contracts from entities.
+    \item \textbf{Stock Ledger} — Append-only ledger with running balances, optimistic locking (\texttt{@Version}), and a database check constraint ensuring non-negative balances.
+    \item \textbf{Soft Deletes} — Entities use an \texttt{active} flag instead of hard deletion.
+    \item \textbf{AOP Audit Trail} — AspectJ pointcuts automatically log operations, stock movements, and AI decisions to the \texttt{audit\_logs} table.
+    \item \textbf{AI-in-the-Loop} — AI suggestions are logged with confidence scores; supervisors can approve or override decisions with documented reasoning.
+\end{itemize}
+
+\subsection{High-Level Data Flow}
+
+\begin{center}
+\small
+\begin{tabular}{ccccc}
+\textbf{Client} & $\longrightarrow$ & \textbf{Spring Boot API} & $\longrightarrow$ & \textbf{PostgreSQL} \\
+               &                    & $\downarrow$ \textit{async} &                    & \\
+               &                    & \textbf{FastAPI AI Service} &                    & \\
+               &                    & \footnotesize{(XGBoost, Prophet)} &              & \\
+\end{tabular}
+\end{center}
+
+% ── 4. DATA MODEL ────────────────────────────────────────────────────────────
+\section{Data Model}
+
+The database contains \textbf{16 entities} organized across five domains:
+
+\begin{multicols}{2}
+\small
+\textbf{Users \& Auth}
+\begin{itemize}[nosep,leftmargin=1em]
+    \item \texttt{users} — Implements \texttt{UserDetails}; fields: UUID, username, email, role, position coordinates
+    \item \texttt{audit\_logs} — Action, entity type/id, old/new values, IP, user agent
+\end{itemize}
+
+\textbf{Warehouse}
+\begin{itemize}[nosep,leftmargin=1em]
+    \item \texttt{entrepot} — Code, name, city
+    \item \texttt{emplacements} — Zone, type (6 types), 3D coordinates, distances
+\end{itemize}
+
+\textbf{Products \& Inventory}
+\begin{itemize}[nosep,leftmargin=1em]
+    \item \texttt{products} — SKU, name, category, price, min/max stock, volume, weight
+    \item \texttt{code\_barre} — Multi-barcode (EAN13, CODE128, QR)
+    \item \texttt{stock\_ledger} — Versioned, movement type, running balance
+    \item \texttt{historique\_demande} — Daily demand history
+    \item \texttt{politique\_reappro} — Safety stock, lot size
+    \item \texttt{delais\_appro} — Lead time in days
+    \item \texttt{cmd\_achat\_ouvertes} — Open purchase orders
+\end{itemize}
+
+\columnbreak
+
+\textbf{Operations}
+\begin{itemize}[nosep,leftmargin=1em]
+    \item \texttt{transactions} — Type (5 types), status (6 states), priority, references
+    \item \texttt{lignes\_transaction} — Line items with source/destination locations
+    \item \texttt{chariots} — Cart fleet with status tracking
+    \item \texttt{task\_discrepancies} — Issue type, expected vs.\ actual qty, resolution
+\end{itemize}
+
+\textbf{AI}
+\begin{itemize}[nosep,leftmargin=1em]
+    \item \texttt{ai\_decision\_logs} — Decision type, suggestion, confidence, override tracking
+\end{itemize}
+\end{multicols}
+
+% ── 5. FUNCTIONALITIES ──────────────────────────────────────────────────────
+\section{Functionalities}
+
+The API exposes \textbf{100+ endpoints} across 33 controllers, organized into the following functional modules:
+
+\subsection{Authentication \& Authorization}
+
+JWT-based stateless authentication with 24-hour access tokens and 7-day refresh tokens. Three roles are supported:
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{lXXX}
+\toprule
+\textbf{Permission} & \textbf{Admin} & \textbf{Supervisor} & \textbf{Employee} \\
+\midrule
+product read/write    & \checkmark/\checkmark & \checkmark/\checkmark & \checkmark/$\times$ \\
+inventory read/write  & \checkmark/\checkmark & \checkmark/\checkmark & \checkmark/$\times$ \\
+location read/write   & \checkmark/\checkmark & \checkmark/\checkmark & $\times$/$\times$ \\
+operation read/write  & \checkmark/\checkmark & \checkmark/\checkmark & \checkmark/\checkmark \\
+user read/write       & \checkmark/\checkmark & \checkmark/$\times$     & $\times$/$\times$ \\
+dashboard read        & \checkmark            & \checkmark              & \checkmark \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Core Warehouse Operations}
+
+\begin{itemize}[nosep,leftmargin=1.2em]
+    \item \textbf{Goods Receipt} — Receive shipments with barcode scanning, automatic stock ledger updates, and AI-suggested storage locations.
+    \item \textbf{Stock Transfers} — Move products between warehouse locations with full traceability through the stock ledger.
+    \item \textbf{Order Picking} — Line-by-line pick execution with AI-optimized multi-chariot routing and congestion detection.
+    \item \textbf{Delivery} — Outbound delivery processing with status tracking.
+    \item \textbf{Stock Adjustments} — Manual inventory corrections with mandatory audit trail.
+\end{itemize}
+
+\subsection{Employee Workflow Engine}
+
+A complete task lifecycle managed through the \texttt{/operations} endpoints:
+\begin{center}
+\small
+\textbf{Assign} $\rightarrow$ \textbf{Start} $\rightarrow$ \textbf{Execute Lines} (barcode scan + stock update) $\rightarrow$ \textbf{Report Issues} $\rightarrow$ \textbf{Complete}
+\end{center}
+
+Employees can report discrepancies (missing, damaged, excess, wrong location, not found, insufficient stock) at any point during execution. Discrepancies are tracked and resolved by supervisors or administrators.
+
+\subsection{AI-Powered Intelligence}
+
+The backend proxies requests to an external FastAPI service providing:
+
+\begin{enumerate}[nosep,leftmargin=1.2em]
+    \item \textbf{Demand Forecasting} — XGBoost + Prophet ensemble model for SKU-level demand predictions.
+    \item \textbf{Smart Storage Assignment} — AI-optimized location selection based on product dimensions, weight, turnover, and warehouse topology.
+    \item \textbf{Picking Route Optimization} — Multi-chariot nearest-neighbor algorithm with congestion avoidance.
+    \item \textbf{Warehouse Simulation} — Chronological event processing for what-if scenario analysis.
+    \item \textbf{Explainable AI} — Feature importance analysis and prediction reasoning.
+    \item \textbf{Preparation Orders} — Automated order generation based on demand forecasts and reorder policies.
+\end{enumerate}
+
+All AI decisions are recorded in \texttt{ai\_decision\_logs} with confidence scores, enabling a human-in-the-loop workflow where supervisors can approve or override suggestions.
+
+\subsection{Monitoring \& Reporting}
+
+\begin{itemize}[nosep,leftmargin=1.2em]
+    \item \textbf{Admin Dashboard} — KPIs: total products, locations, users, active employees, chariots, operations, AI decision metrics, and recent audit activity.
+    \item \textbf{Employee Dashboard} — Personal task statistics and performance metrics.
+    \item \textbf{Real-time Monitoring} — Active operations, employee positions, chariot fleet status.
+    \item \textbf{Reports} — Stock movement history and employee productivity analysis.
+    \item \textbf{Audit Logs} — Filterable action trail with user, entity, and date range queries.
+\end{itemize}
+
+\subsection{Additional Modules}
+
+\begin{itemize}[nosep,leftmargin=1.2em]
+    \item \textbf{Product Management} — Full CRUD with multi-barcode support (EAN13, CODE128, QR).
+    \item \textbf{Warehouse \& Location Management} — Warehouses with geolocated storage locations (6 types: receiving, storage, picking, expedition, QC, damaged).
+    \item \textbf{Chariot (Cart) Fleet} — Status tracking (available, in-use, maintenance, retired), assignment to tasks.
+    \item \textbf{Purchase Orders} — Open order tracking with expected receipt dates.
+    \item \textbf{Barcode Scanner} — Universal decode endpoint identifying products, locations, or chariots.
+\end{itemize}
+
+% ── 6. DEPLOYMENT ────────────────────────────────────────────────────────────
+\section{Deployment}
+
+The application is containerized using a \textbf{multi-stage Docker build}: JDK 17 Alpine for compilation, JRE 17 Alpine for runtime (G1GC garbage collector, 128--256\,MB heap). A \texttt{docker-compose.yml} orchestrates two services:
+
+\begin{itemize}[nosep,leftmargin=1.2em]
+    \item \textbf{db} — PostgreSQL 15 Alpine with a persistent named volume.
+    \item \textbf{backend} — Spring Boot application with environment-based configuration (database credentials, JWT secret, AI service URL, Spring profile).
+\end{itemize}
+
+The production profile connects to PostgreSQL with \texttt{ddl-auto: update}, while the development profile supports MySQL/XAMPP. Swagger UI is available at \texttt{/api/swagger-ui.html} for interactive API exploration.
+
+% ── 7. CONCLUSION ────────────────────────────────────────────────────────────
+\section{Conclusion}
+
+MobAI delivers a comprehensive warehouse management solution that bridges the gap between traditional WMS operations and modern AI capabilities. With 16 database entities, 100+ REST endpoints, role-based security, a complete employee workflow engine, and seamless AI/ML integration for forecasting, storage optimization, and route planning, the backend provides a solid foundation for intelligent warehouse automation. The Docker-based deployment ensures portability and reproducibility across environments.
+
+\end{document}
