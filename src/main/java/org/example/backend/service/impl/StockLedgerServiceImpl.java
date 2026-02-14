@@ -23,7 +23,7 @@ public class StockLedgerServiceImpl implements StockLedgerService {
 
     @Override
     public StockLedger recordStockIn(Product product, Location location, int quantity,
-                                      Transaction transaction, TransactionLine transactionLine, User performedBy) {
+            Transaction transaction, TransactionLine transactionLine, User performedBy) {
         log.info("Recording stock IN: product={}, location={}, qty={}, txn={}",
                 product.getSku(), location.getCode(), quantity, transaction.getReference());
 
@@ -36,7 +36,7 @@ public class StockLedgerServiceImpl implements StockLedgerService {
 
     @Override
     public StockLedger recordStockOut(Product product, Location location, int quantity,
-                                       Transaction transaction, TransactionLine transactionLine, User performedBy) {
+            Transaction transaction, TransactionLine transactionLine, User performedBy) {
         log.info("Recording stock OUT: product={}, location={}, qty={}, txn={}",
                 product.getSku(), location.getCode(), quantity, transaction.getReference());
 
@@ -55,7 +55,7 @@ public class StockLedgerServiceImpl implements StockLedgerService {
 
     @Override
     public StockLedger recordAdjustment(Product product, Location location, int quantity,
-                                          Transaction transaction, TransactionLine transactionLine, User performedBy) {
+            Transaction transaction, TransactionLine transactionLine, User performedBy) {
         log.info("Recording stock ADJUSTMENT: product={}, location={}, qty={}, txn={}",
                 product.getSku(), location.getCode(), quantity, transaction.getReference());
 
@@ -64,7 +64,8 @@ public class StockLedgerServiceImpl implements StockLedgerService {
 
         if (newBalance < 0) {
             throw new InsufficientStockException(
-                    String.format("Adjustment would result in negative stock for product %s at location %s. Balance: %d, Adjustment: %d",
+                    String.format(
+                            "Adjustment would result in negative stock for product %s at location %s. Balance: %d, Adjustment: %d",
                             product.getSku(), location.getCode(), currentBalance, quantity));
         }
 
@@ -100,8 +101,8 @@ public class StockLedgerServiceImpl implements StockLedgerService {
     }
 
     private StockLedger createLedgerEntry(Product product, Location location, Transaction transaction,
-                                            TransactionLine transactionLine, MovementType movementType,
-                                            int quantity, int runningBalance, User performedBy) {
+            TransactionLine transactionLine, MovementType movementType,
+            int quantity, int runningBalance, User performedBy) {
         StockLedger entry = StockLedger.builder()
                 .product(product)
                 .location(location)

@@ -6,7 +6,8 @@ import org.example.backend.entity.User;
 
 /**
  * Service for Delivery operations.
- * Delivery = final expedition of products (stock OUT from picking/expedition location).
+ * Delivery = final expedition of products (stock OUT from picking/expedition
+ * location).
  */
 public interface DeliveryService {
 

@@ -75,7 +75,8 @@ public class GlobalExceptionHandler {
                 log.error("Concurrent modification detected: {}", ex.getMessage());
 
                 return ResponseEntity.status(HttpStatus.CONFLICT)
-                                .body(ApiResponse.error("Concurrent modification detected. Please retry.", "OPTIMISTIC_LOCK_ERROR"));
+                                .body(ApiResponse.error("Concurrent modification detected. Please retry.",
+                                                "OPTIMISTIC_LOCK_ERROR"));
         }
 
         @ExceptionHandler(BadCredentialsException.class)

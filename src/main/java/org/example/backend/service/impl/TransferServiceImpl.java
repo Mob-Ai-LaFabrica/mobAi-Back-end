@@ -38,8 +38,7 @@ public class TransferServiceImpl implements TransferService {
         stockLedgerService.validateStockAvailability(
                 line.getProduct().getId(),
                 line.getSourceLocation().getId(),
-                line.getQuantity()
-        );
+                line.getQuantity());
 
         // Stock OUT from source location
         stockLedgerService.recordStockOut(
@@ -48,8 +47,7 @@ public class TransferServiceImpl implements TransferService {
                 line.getQuantity(),
                 transaction,
                 line,
-                performer
-        );
+                performer);
 
         // Stock IN at destination location
         stockLedgerService.recordStockIn(
@@ -58,8 +56,7 @@ public class TransferServiceImpl implements TransferService {
                 line.getQuantity(),
                 transaction,
                 line,
-                performer
-        );
+                performer);
     }
 
     @Override

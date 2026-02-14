@@ -12,7 +12,8 @@ import org.example.backend.entity.User;
 public interface TransferService {
 
     /**
-     * Process a single transfer line: stock OUT from source, stock IN at destination.
+     * Process a single transfer line: stock OUT from source, stock IN at
+     * destination.
      */
     void processTransferLine(Transaction transaction, TransactionLine line, User performer);
 

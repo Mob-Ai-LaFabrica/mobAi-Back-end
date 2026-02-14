@@ -38,8 +38,7 @@ public class PickingServiceImpl implements PickingService {
         stockLedgerService.validateStockAvailability(
                 line.getProduct().getId(),
                 line.getSourceLocation().getId(),
-                line.getQuantity()
-        );
+                line.getQuantity());
 
         // Stock OUT from storage location
         stockLedgerService.recordStockOut(
@@ -48,8 +47,7 @@ public class PickingServiceImpl implements PickingService {
                 line.getQuantity(),
                 transaction,
                 line,
-                performer
-        );
+                performer);
 
         // Stock IN at picking rack location
         stockLedgerService.recordStockIn(
@@ -58,8 +56,7 @@ public class PickingServiceImpl implements PickingService {
                 line.getQuantity(),
                 transaction,
                 line,
-                performer
-        );
+                performer);
     }
 
     @Override

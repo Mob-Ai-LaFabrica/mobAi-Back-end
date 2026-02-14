@@ -23,7 +23,7 @@ public class AuditServiceImpl implements AuditService {
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public AuditLog log(User user, String action, String entityType, UUID entityId,
-                         String oldValue, String newValue) {
+            String oldValue, String newValue) {
         AuditLog auditLog = AuditLog.builder()
                 .user(user)
                 .action(action)

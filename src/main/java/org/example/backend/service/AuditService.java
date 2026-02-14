@@ -15,7 +15,7 @@ public interface AuditService {
      * Log an action with entity context.
      */
     AuditLog log(User user, String action, String entityType, UUID entityId,
-                 String oldValue, String newValue);
+            String oldValue, String newValue);
 
     /**
      * Log an action without old/new values.

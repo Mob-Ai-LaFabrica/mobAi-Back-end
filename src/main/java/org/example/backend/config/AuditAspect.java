@@ -34,13 +34,12 @@ public class AuditAspect {
 
     // ===================== OPERATION LIFECYCLE =====================
 
-    @AfterReturning(
-            pointcut = "execution(* org.example.backend.service.EmployeeWorkflowService.startOperation(..))",
-            returning = "result")
+    @AfterReturning(pointcut = "execution(* org.example.backend.service.EmployeeWorkflowService.startOperation(..))", returning = "result")
     public void auditStartOperation(JoinPoint joinPoint, Object result) {
         try {
             User user = getCurrentUser();
-            if (user == null) return;
+            if (user == null)
+                return;
 
             Map<String, Object> resultMap = (Map<String, Object>) result;
             UUID transactionId = (UUID) resultMap.get("transactionId");
@@ -53,13 +52,12 @@ public class AuditAspect {
         }
     }
 
-    @AfterReturning(
-            pointcut = "execution(* org.example.backend.service.EmployeeWorkflowService.executeOperationLine(..))",
-            returning = "result")
+    @AfterReturning(pointcut = "execution(* org.example.backend.service.EmployeeWorkflowService.executeOperationLine(..))", returning = "result")
     public void auditExecuteOperationLine(JoinPoint joinPoint, Object result) {
         try {
             User user = getCurrentUser();
-            if (user == null) return;
+            if (user == null)
+                return;
 
             Object[] args = joinPoint.getArgs();
             // args: username, ExecuteLineRequest
@@ -74,13 +72,12 @@ public class AuditAspect {
         }
     }
 
-    @AfterReturning(
-            pointcut = "execution(* org.example.backend.service.EmployeeWorkflowService.completeOperation(..))",
-            returning = "result")
+    @AfterReturning(pointcut = "execution(* org.example.backend.service.EmployeeWorkflowService.completeOperation(..))", returning = "result")
     public void auditCompleteOperation(JoinPoint joinPoint, Object result) {
         try {
             User user = getCurrentUser();
-            if (user == null) return;
+            if (user == null)
+                return;
 
             Map<String, Object> resultMap = (Map<String, Object>) result;
             UUID transactionId = (UUID) resultMap.get("transactionId");
@@ -95,23 +92,17 @@ public class AuditAspect {
 
     // ===================== STOCK MOVEMENTS =====================
 
-    @AfterReturning(
-            pointcut = "execution(* org.example.backend.service.impl.StockLedgerServiceImpl.recordStockIn(..))",
-            returning = "result")
+    @AfterReturning(pointcut = "execution(* org.example.backend.service.impl.StockLedgerServiceImpl.recordStockIn(..))", returning = "result")
     public void auditStockIn(JoinPoint joinPoint, Object result) {
         auditStockMovement(joinPoint, "STOCK_IN");
     }
 
-    @AfterReturning(
-            pointcut = "execution(* org.example.backend.service.impl.StockLedgerServiceImpl.recordStockOut(..))",
-            returning = "result")
+    @AfterReturning(pointcut = "execution(* org.example.backend.service.impl.StockLedgerServiceImpl.recordStockOut(..))", returning = "result")
     public void auditStockOut(JoinPoint joinPoint, Object result) {
         auditStockMovement(joinPoint, "STOCK_OUT");
     }
 
-    @AfterReturning(
-            pointcut = "execution(* org.example.backend.service.impl.StockLedgerServiceImpl.recordAdjustment(..))",
-            returning = "result")
+    @AfterReturning(pointcut = "execution(* org.example.backend.service.impl.StockLedgerServiceImpl.recordAdjustment(..))", returning = "result")
     public void auditStockAdjustment(JoinPoint joinPoint, Object result) {
         auditStockMovement(joinPoint, "STOCK_ADJUSTMENT");
     }
@@ -119,7 +110,8 @@ public class AuditAspect {
     private void auditStockMovement(JoinPoint joinPoint, String action) {
         try {
             User user = getCurrentUser();
-            if (user == null) return;
+            if (user == null)
+                return;
 
             Object[] args = joinPoint.getArgs();
             // args: Product, Location, int quantity, Transaction, TransactionLine, User
@@ -136,12 +128,12 @@ public class AuditAspect {
 
     // ===================== AI DECISION OVERRIDES =====================
 
-    @AfterReturning(
-            pointcut = "execution(* org.example.backend.controller.AiDecisionController.overrideDecision(..))")
+    @AfterReturning(pointcut = "execution(* org.example.backend.controller.AiDecisionController.overrideDecision(..))")
     public void auditAiOverride(JoinPoint joinPoint) {
         try {
             User user = getCurrentUser();
-            if (user == null) return;
+            if (user == null)
+                return;
 
             Object[] args = joinPoint.getArgs();
             UUID decisionId = (UUID) args[0];
@@ -152,12 +144,12 @@ public class AuditAspect {
         }
     }
 
-    @AfterReturning(
-            pointcut = "execution(* org.example.backend.controller.AiDecisionController.approveDecision(..))")
+    @AfterReturning(pointcut = "execution(* org.example.backend.controller.AiDecisionController.approveDecision(..))")
     public void auditAiApproval(JoinPoint joinPoint) {
         try {
             User user = getCurrentUser();
-            if (user == null) return;
+            if (user == null)
+                return;
 
             Object[] args = joinPoint.getArgs();
             UUID decisionId = (UUID) args[0];
@@ -168,12 +160,12 @@ public class AuditAspect {
         }
     }
 
-    @AfterReturning(
-            pointcut = "execution(* org.example.backend.controller.AdminAiDecisionController.overrideAiDecision(..))")
+    @AfterReturning(pointcut = "execution(* org.example.backend.controller.AdminAiDecisionController.overrideAiDecision(..))")
     public void auditAdminAiOverride(JoinPoint joinPoint) {
         try {
             User user = getCurrentUser();
-            if (user == null) return;
+            if (user == null)
+                return;
 
             Object[] args = joinPoint.getArgs();
             UUID decisionId = (UUID) args[0];
@@ -186,13 +178,12 @@ public class AuditAspect {
 
     // ===================== ISSUE REPORTING =====================
 
-    @AfterReturning(
-            pointcut = "execution(* org.example.backend.service.EmployeeWorkflowService.reportIssue(..))",
-            returning = "result")
+    @AfterReturning(pointcut = "execution(* org.example.backend.service.EmployeeWorkflowService.reportIssue(..))", returning = "result")
     public void auditReportIssue(JoinPoint joinPoint, Object result) {
         try {
             User user = getCurrentUser();
-            if (user == null) return;
+            if (user == null)
+                return;
 
             Map<String, Object> resultMap = (Map<String, Object>) result;
             UUID discrepancyId = (UUID) resultMap.get("discrepancyId");

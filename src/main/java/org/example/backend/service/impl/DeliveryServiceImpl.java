@@ -34,8 +34,7 @@ public class DeliveryServiceImpl implements DeliveryService {
         stockLedgerService.validateStockAvailability(
                 line.getProduct().getId(),
                 line.getSourceLocation().getId(),
-                line.getQuantity()
-        );
+                line.getQuantity());
 
         // Stock OUT from picking/expedition location (product leaves the warehouse)
         stockLedgerService.recordStockOut(
@@ -44,8 +43,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                 line.getQuantity(),
                 transaction,
                 line,
-                performer
-        );
+                performer);
     }
 
     @Override

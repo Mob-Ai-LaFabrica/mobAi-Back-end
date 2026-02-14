@@ -15,21 +15,24 @@ public interface StockLedgerService {
      * Record a stock IN movement (increases balance at location).
      */
     StockLedger recordStockIn(Product product, Location location, int quantity,
-                              Transaction transaction, TransactionLine transactionLine, User performedBy);
+            Transaction transaction, TransactionLine transactionLine, User performedBy);
 
     /**
      * Record a stock OUT movement (decreases balance at location).
      * Validates sufficient stock before proceeding.
-     * @throws org.example.backend.exception.InsufficientStockException if balance would go negative
+     * 
+     * @throws org.example.backend.exception.InsufficientStockException if balance
+     *                                                                  would go
+     *                                                                  negative
      */
     StockLedger recordStockOut(Product product, Location location, int quantity,
-                               Transaction transaction, TransactionLine transactionLine, User performedBy);
+            Transaction transaction, TransactionLine transactionLine, User performedBy);
 
     /**
      * Record a stock adjustment (can be positive or negative).
      */
     StockLedger recordAdjustment(Product product, Location location, int quantity,
-                                  Transaction transaction, TransactionLine transactionLine, User performedBy);
+            Transaction transaction, TransactionLine transactionLine, User performedBy);
 
     /**
      * Get current stock balance for a product at a location.
@@ -38,7 +41,9 @@ public interface StockLedgerService {
 
     /**
      * Validate that sufficient stock exists before an outbound move.
-     * @throws org.example.backend.exception.InsufficientStockException if insufficient
+     * 
+     * @throws org.example.backend.exception.InsufficientStockException if
+     *                                                                  insufficient
      */
     void validateStockAvailability(UUID productId, UUID locationId, int requiredQuantity);
 }

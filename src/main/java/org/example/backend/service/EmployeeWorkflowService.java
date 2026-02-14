@@ -205,7 +205,8 @@ public class EmployeeWorkflowService {
     }
 
     /**
-     * Dispatch stock movement to the appropriate operation service based on transaction type.
+     * Dispatch stock movement to the appropriate operation service based on
+     * transaction type.
      */
     private void processStockMovement(Transaction transaction, TransactionLine line, User performer) {
         switch (transaction.getType()) {

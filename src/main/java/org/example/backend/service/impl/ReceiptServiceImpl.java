@@ -37,8 +37,7 @@ public class ReceiptServiceImpl implements ReceiptService {
                 line.getQuantity(),
                 transaction,
                 line,
-                performer
-        );
+                performer);
     }
 
     @Override

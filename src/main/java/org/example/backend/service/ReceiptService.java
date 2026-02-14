@@ -6,7 +6,8 @@ import org.example.backend.entity.User;
 
 /**
  * Service for Receipt operations.
- * Receipt = receiving merchandise into the warehouse (stock IN at destination location).
+ * Receipt = receiving merchandise into the warehouse (stock IN at destination
+ * location).
  */
 public interface ReceiptService {
 
