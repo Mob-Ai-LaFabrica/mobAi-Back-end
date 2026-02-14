@@ -36,6 +36,12 @@ server:
   servlet:
     context-path: /api
 
+# AI Service Configuration
+ai:
+  service:
+    base-url: ${AI_SERVICE_URL:http://4.251.194.25:8000}
+    timeout: ${AI_SERVICE_TIMEOUT:30000}
+
 logging:
   level:
     root: WARN

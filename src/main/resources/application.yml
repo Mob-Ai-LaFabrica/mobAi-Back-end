@@ -3,12 +3,12 @@ spring:
   application:
     name: mobai-warehouse-backend
 
-  # Database Configuration (MySQL via XAMPP)
+  # Database Configuration (PostgreSQL for deployment)
   datasource:
-    url: jdbc:mysql://localhost:3306/mobai_warehouse?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root
-    password:
+    url: ${DATABASE_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:mobai_warehouse}}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:}
 
   # SQL initialization (disabled - seeding handled by DataSeeder component)
   sql:
@@ -37,6 +37,12 @@ server:
   port: 8080
   servlet:
     context-path: /api
+
+# AI Service Configuration
+ai:
+  service:
+    base-url: http://4.251.194.25:8000
+    timeout: 30000
 
 # Logging
 logging:
