@@ -21,11 +21,12 @@ WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 
 # Render sets PORT env variable (defaults to 10000 on Render)
-ENV PORT=10000
+# Azure App Service uses 8080 by default
+ENV PORT=8080
 
 EXPOSE ${PORT}
 
-# JVM tuning for Render free tier (512MB RAM)
+# JVM tuning for cloud deployment
 # Use shell form so ${PORT} is expanded at runtime
 ENTRYPOINT exec java \
   -Xmx256m \
