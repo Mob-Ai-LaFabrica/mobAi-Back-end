@@ -42,6 +42,15 @@ ai:
     base-url: ${AI_SERVICE_URL:http://4.251.194.25:8000}
     timeout: ${AI_SERVICE_TIMEOUT:30000}
 
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    disable-swagger-default-url: false
+
 logging:
   level:
     root: WARN
