@@ -1,7 +1,6 @@
 package org.example.backend.service;
 
 import org.example.backend.entity.*;
-import org.example.backend.enums.MovementType;
 
 import java.util.UUID;
 

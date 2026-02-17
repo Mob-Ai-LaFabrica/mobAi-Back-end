@@ -6,7 +6,6 @@ import org.example.backend.entity.AuditLog;
 import org.example.backend.entity.User;
 import org.example.backend.repository.AuditLogRepository;
 import org.example.backend.service.AuditService;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;

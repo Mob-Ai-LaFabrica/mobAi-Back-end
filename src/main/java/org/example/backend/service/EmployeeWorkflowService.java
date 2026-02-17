@@ -14,7 +14,6 @@ import org.example.backend.entity.TransactionLine;
 import org.example.backend.entity.User;
 import org.example.backend.enums.IssueType;
 import org.example.backend.enums.TransactionStatus;
-import org.example.backend.enums.TransactionType;
 import org.example.backend.exception.ResourceNotFoundException;
 import org.example.backend.repository.ChariotRepository;
 import org.example.backend.repository.ProductBarcodeRepository;
