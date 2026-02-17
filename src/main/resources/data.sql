@@ -26,7 +26,7 @@ insert into users (
    ''
 )),
            'admin',
-           'admin@mobai.com',
+           'admin',
            '$2a$10$VDKoHpB4kCuf5S1dwbsFC.Ulj1wpBBKc1Eap1qH5Hp6EGKWPvAqJy',
            'System',
            'Administrator',
@@ -43,7 +43,7 @@ insert into users (
    ''
 )),
                      'supervisor1',
-                     'supervisor@mobai.com',
+                     'supervisor',
                      '$2a$10$v89LD.vJ5kuEHp5/8mEjmOt99EvrCk5Z7P6Uf6.nKJKhCF2.WEQj6',
                      'John',
                      'Supervisor',
@@ -60,7 +60,7 @@ insert into users (
    ''
 )),
                                'employee1',
-                               'employee@mobai.com',
+                               'employee',
                                '$2a$10$UXm2U4oE0YCJzKhNvLKPe.xPeREFfCjT.n.KmZUeODCREJKEyu9E6',
                                'Jane',
                                'Employee',

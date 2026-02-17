@@ -1,0 +1,3 @@
+id_produit,total_demand,demand_days,avg_demand,demand_frequency,priority_score,demand_score,frequency_score,categorie,weight
+1,100,10,10,0.8,0.6,0.5,0.7,A,0.6
+2,50,8,6,0.5,0.4,0.4,0.5,UNKNOWN,0.4
