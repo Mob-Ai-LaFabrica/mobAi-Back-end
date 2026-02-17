@@ -8,7 +8,7 @@ This is the backend service for the MobAi Warehouse Management System.
 - Java 17+
 - Maven 3.6+
 - PostgreSQL (or H2 for testing)
-
+/
 ### Running the Application
 
 ```bash
