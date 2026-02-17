@@ -1,0 +1,3 @@
+id_emplacement,type_emplacement,code_emplacement,x,y,z,zone,floor
+1,PICKING,PK-01,1,1,0,A,0
+2,RESERVE,RS-01,2,3,0,B,0

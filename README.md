@@ -13,9 +13,12 @@
   Demand forecasting · Smart storage assignment · Optimized picking routes · Real-time monitoring
 </p>
 
----
-
-## 📋 Table of Contents
+### Prerequisites
+- Java 17+
+- Maven 3.6+
+- PostgreSQL (or H2 for testing)
+/
+### Running the Application
 
 - [Overview](#-overview)
 - [Tech Stack](#-tech-stack)

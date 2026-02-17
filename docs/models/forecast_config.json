@@ -1,0 +1,1 @@
+{"optimal_threshold": 0.5, "bias_multiplier": 1.0, "ensemble_alpha": 0.7, "smearing_factor": 1.0, "has_lf_regressor": false, "use_base_margin": false, "use_expected_value": false, "prob_power": 1.0, "feature_cols_regression": ["is_hf", "dow", "month", "p_avg", "cat_enc"]}
