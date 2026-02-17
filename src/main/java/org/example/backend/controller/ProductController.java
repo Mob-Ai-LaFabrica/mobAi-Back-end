@@ -58,6 +58,7 @@ public class ProductController {
         map.put("unitOfMeasure", p.getUnitOfMeasure());
         map.put("category", p.getCategory());
         map.put("active", p.getActive());
+        map.put("quantity", p.getQuantity());
         return map;
     }
 }

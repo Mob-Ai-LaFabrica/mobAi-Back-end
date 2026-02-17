@@ -48,6 +48,8 @@ public class ProductCreateRequest {
 
     private Boolean isGerbable;
 
+    private Integer quantity = 0;
+
     private List<BarcodeEntry> barcodes;
 
     @Data

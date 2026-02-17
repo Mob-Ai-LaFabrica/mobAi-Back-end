@@ -73,6 +73,10 @@ public class Product {
     @Builder.Default
     private Boolean active = true;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer quantity = 0;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

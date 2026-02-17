@@ -86,6 +86,7 @@ public class ProductManagementController {
                 .volumePcs(request.getVolumePcs())
                 .poids(request.getPoids())
                 .isGerbable(request.getIsGerbable())
+                .quantity(request.getQuantity() != null ? request.getQuantity() : 0)
                 .build();
 
         product = productRepository.save(product);
@@ -136,6 +137,8 @@ public class ProductManagementController {
             product.setIsGerbable(request.getIsGerbable());
         if (request.getActive() != null)
             product.setActive(request.getActive());
+        if (request.getQuantity() != null)
+            product.setQuantity(request.getQuantity());
 
         product = productRepository.save(product);
 
@@ -212,6 +215,7 @@ public class ProductManagementController {
         map.put("poids", product.getPoids());
         map.put("isGerbable", product.getIsGerbable());
         map.put("active", product.getActive());
+        map.put("quantity", product.getQuantity());
         map.put("createdAt", product.getCreatedAt());
         map.put("updatedAt", product.getUpdatedAt());
         return map;

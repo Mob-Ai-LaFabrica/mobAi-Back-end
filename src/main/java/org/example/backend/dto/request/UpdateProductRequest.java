@@ -32,4 +32,6 @@ public class UpdateProductRequest {
     private Boolean isGerbable;
 
     private Boolean active;
+
+    private Integer quantity;
 }
